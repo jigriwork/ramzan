@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { settingsService } from '@/services/settingsService';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const methods = [
   { id: 1, name: "University of Islamic Sciences, Karachi", desc: "Standard for India, Pakistan, Bangladesh." },

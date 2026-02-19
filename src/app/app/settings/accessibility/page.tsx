@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { cn } from '@/lib/utils';
 
 export default function AccessibilitySettingsPage() {
   const router = useRouter();
