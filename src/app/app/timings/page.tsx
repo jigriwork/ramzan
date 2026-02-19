@@ -19,8 +19,8 @@ export default function TimingsPage() {
     if (!cityName) return;
     setLoading(true);
     try {
-      // Changed method to 1 (University of Islamic Sciences, Karachi) which is standard for India
-      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1`);
+      // Method 1 with adjustment=-1 for accurate Indian Hijri dating
+      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1&adjustment=-1`);
       const data = await response.json();
       if (data.code === 200) {
         setTimings(data.data.timings);
@@ -38,7 +38,6 @@ export default function TimingsPage() {
     if (city) {
       fetchTimings(city);
     } else {
-      // Default to Berhampur if no city
       fetchTimings('Berhampur');
     }
   }, [city]);
@@ -117,7 +116,7 @@ export default function TimingsPage() {
           <Card className="bg-secondary/20 border-none rounded-[2rem]">
             <CardContent className="p-8 text-center space-y-2">
               <p className="text-sm text-muted-foreground">Current Selection</p>
-              <p className="text-xl font-headline font-bold">{city || 'Berhampur'}, Odisha</p>
+              <p className="text-xl font-headline font-bold">{city || 'Berhampur'}, India</p>
             </CardContent>
           </Card>
         </>

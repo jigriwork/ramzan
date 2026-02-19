@@ -9,7 +9,7 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Public Collections: Allow anyone to read, authenticated users to seed/write
+    // Public Collections: Allow anyone to read, including list and get
     match /quran_surahs/{document=**} {
       allow read: if true;
       allow write: if isSignedIn();
@@ -29,12 +29,11 @@ service cloud.firestore {
     match /users/{uid} {
       allow read, write: if isOwner(uid);
       
-      // Nested subcollections for better organizational matching
-      match /bookmarks/{bookmarkId} {
+      match /bookmarks/{document=**} {
         allow read, write: if isOwner(uid);
       }
       
-      match /favorite_duas/{duaId} {
+      match /favorite_duas/{document=**} {
         allow read, write: if isOwner(uid);
       }
       

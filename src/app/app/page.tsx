@@ -34,9 +34,9 @@ export default function HomeDashboard() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        // Method 1 is standard for India (University of Islamic Sciences, Karachi)
-        // We add adjustment=-1 to align with Indian moon sighting for the start of Ramadan if needed
-        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1`);
+        // Method 1 is standard for the Subcontinent (India/Pakistan)
+        // adjustment=-1 is applied to align with the Indian moon sighting
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1&adjustment=-1`);
         const data = await response.json();
         if (data.code === 200) {
           setTimings(data.data.timings);
@@ -54,7 +54,7 @@ export default function HomeDashboard() {
   const iftarTime = timings?.Maghrib || "--:--";
   const displayCity = city || "Berhampur";
   
-  // Real Hijri Date Display
+  // Real Hijri Date Display for India
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
 
   const lastReadSurahId = userProfile?.lastRead?.surahId;
@@ -75,7 +75,7 @@ export default function HomeDashboard() {
         <CardHeader className="pb-2 px-8 pt-8">
           <div className="flex justify-between items-center">
             <CardTitle className="text-primary-foreground/60 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5" /> {displayCity}
+              <MapPin className="w-3.5 h-3.5" /> {displayCity}, India
             </CardTitle>
             <Link href="/app/timings">
               <span className="text-[10px] font-black bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider hover:bg-white/20 transition-all cursor-pointer">
