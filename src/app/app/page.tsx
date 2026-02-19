@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2 } from 'lucide-react';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, limit, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -16,7 +16,12 @@ export default function HomeDashboard() {
   const { user } = useUser();
   const db = useFirestore();
   const [timings, setTimings] = useState<any>(null);
+  const [hijri, setHijri] = useState<any>(null);
   const [loadingTimings, setLoadingTimings] = useState(false);
+
+  // Fetch User Profile for lastRead
+  const userRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
+  const { data: userProfile } = useDoc(userRef);
 
   // Fetch a random Dua for the day
   const duasQuery = useMemoFirebase(() => query(collection(db, 'duas'), limit(1)), [db]);
@@ -32,6 +37,7 @@ export default function HomeDashboard() {
         const data = await response.json();
         if (data.code === 200) {
           setTimings(data.data.timings);
+          setHijri(data.data.date.hijri);
         }
       } catch (error) {
         console.error("Failed to fetch timings", error);
@@ -42,17 +48,22 @@ export default function HomeDashboard() {
     fetchTimings();
   }, [city]);
 
-  const ramadanDay = 15; // Static for Phase 1
   const iftarTime = timings?.Maghrib || "--:--";
-  const displayCity = city || "Set Location";
+  const displayCity = city || "Berhampur";
+  
+  const isRamadan = hijri?.month?.en === "Ramaḍān" || hijri?.month?.en === "Ramadan";
+  const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
+  const ramadanDayDisplay = isRamadan ? `Ramadan Day ${hijri.day}` : hijriDisplay;
+
+  const lastReadSurahId = userProfile?.lastRead?.surahId;
 
   return (
     <div className="space-y-8">
       <section className="flex flex-col gap-1">
         <h2 className="text-3xl font-black tracking-tight">
-          Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "User")}
+          Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "Traveler")}
         </h2>
-        <p className="text-muted-foreground font-medium">Ramadan Day {ramadanDay} • 1445 AH</p>
+        <p className="text-muted-foreground font-medium">{ramadanDayDisplay}</p>
       </section>
 
       <Card className="bg-primary text-white overflow-hidden border-none shadow-2xl shadow-primary/20 rounded-[2.5rem] relative">
@@ -132,7 +143,7 @@ export default function HomeDashboard() {
         <CardContent className="p-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-black text-sm uppercase tracking-widest text-primary/60">Your Journey</h3>
-            <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full italic">Ready to learn</span>
+            <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full italic">Continue reading</span>
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-5 p-4 bg-white rounded-3xl shadow-sm border border-transparent hover:border-primary/10 transition-all">
@@ -140,11 +151,11 @@ export default function HomeDashboard() {
                 <BookOpen className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Start Reading</p>
-                <p className="font-bold text-base">Al-Fatiha, Ayah 1</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Last Read</p>
+                <p className="font-bold text-base">{lastReadSurahId ? `Surah ${lastReadSurahId}` : 'No recent reading'}</p>
               </div>
               <Button size="sm" variant="ghost" className="rounded-full font-black text-[10px] uppercase tracking-wider" asChild>
-                <Link href="/app/quran/1">Open</Link>
+                <Link href={lastReadSurahId ? `/app/quran/${lastReadSurahId}` : "/app/quran"}>Open</Link>
               </Button>
             </div>
           </div>
