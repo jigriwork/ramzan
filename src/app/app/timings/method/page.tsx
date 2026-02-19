@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ChevronLeft, Info, Check } from 'lucide-react';
+import { ChevronLeft, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -13,10 +13,9 @@ import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 const methods = [
-  { id: 1, name: "University of Islamic Sciences, Karachi", desc: "Standard for India, Pakistan, Bangladesh." },
-  { id: 3, name: "Muslim World League", desc: "Standard for Europe and parts of USA." },
-  { id: 4, name: "Umm Al-Qura University, Makkah", desc: "Standard for Saudi Arabia." },
-  { id: 5, name: "Egyptian General Authority of Survey", desc: "Standard for Egypt, parts of Arab world." },
+  { id: 1, name: "Standard India Method", desc: "Most accurate and widely used method for all cities in India." },
+  { id: 3, name: "International Standard", desc: "Commonly used by Indian communities abroad." },
+  { id: 4, name: "Umm Al-Qura Method", desc: "Used by those following Saudi Arabian sighting norms." },
 ];
 
 export default function TimingsMethodPage() {
@@ -65,7 +64,7 @@ export default function TimingsMethodPage() {
 
       <Card className="bg-blue-50 border-none rounded-[2rem] p-6 flex gap-4">
         <Info className="w-6 h-6 text-blue-500 shrink-0" />
-        <p className="text-sm text-blue-800 font-medium">Choosing the right method ensures accuracy for your specific geographic location and local moon sighting norms.</p>
+        <p className="text-sm text-blue-800 font-medium">The "Standard India Method" is specifically calibrated for local twilight angles across the Indian subcontinent.</p>
       </Card>
 
       <Button className="w-full h-16 rounded-3xl text-xl font-black shadow-xl shadow-primary/20" onClick={handleSave}>
