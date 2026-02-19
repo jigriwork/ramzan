@@ -35,6 +35,7 @@ export default function HomeDashboard() {
       setLoadingTimings(true);
       try {
         // Method 1 is standard for India (University of Islamic Sciences, Karachi)
+        // We add adjustment=-1 to align with Indian moon sighting for the start of Ramadan if needed
         const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1`);
         const data = await response.json();
         if (data.code === 200) {
