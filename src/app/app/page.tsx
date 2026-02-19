@@ -5,12 +5,13 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2 } from 'lucide-react';
+import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2, Share2 } from 'lucide-react';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, limit, doc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
 
 export default function HomeDashboard() {
   const { city } = useAppSettings();
@@ -26,7 +27,6 @@ export default function HomeDashboard() {
     const timer = setInterval(() => {
       const now = new Date();
       if (now.getDate() !== currentTime.getDate()) {
-        // Refresh everything at midnight to transition Hijri date correctly
         window.location.reload();
       }
       setCurrentTime(now);
@@ -38,18 +38,31 @@ export default function HomeDashboard() {
   const userRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
   const { data: userProfile } = useDoc(userRef);
 
-  // Fetch a random Dua for the day
-  const duasQuery = useMemoFirebase(() => query(collection(db, 'duas'), limit(1)), [db]);
-  const { data: duas, isLoading: loadingDuas } = useCollection(duasQuery);
-  const todayDua = duas?.[0];
+  // Fetch Duas and handle daily rotation
+  const duasQuery = useMemoFirebase(() => query(collection(db, 'duas')), [db]);
+  const { data: allDuas, isLoading: loadingDuas } = useCollection(duasQuery);
+
+  const [todayDua, setTodayDua] = useState<any>(null);
+
+  useEffect(() => {
+    if (allDuas && allDuas.length > 0) {
+      // Calculate day of year to rotate dua daily
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff = now.getTime() - start.getTime();
+      const oneDay = 1000 * 60 * 60 * 24;
+      const dayOfYear = Math.floor(diff / oneDay);
+      
+      const index = dayOfYear % allDuas.length;
+      setTodayDua(allDuas[index]);
+    }
+  }, [allDuas]);
 
   useEffect(() => {
     async function fetchTimings() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        // Method 1: University of Islamic Sciences, Karachi (Standard for Indian Subcontinent)
-        // adjustment=-1: Specifically set for India Hijri sighting (Day 1 fix)
         const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1&adjustment=-1`);
         const data = await response.json();
         if (data.code === 200) {
@@ -76,14 +89,30 @@ export default function HomeDashboard() {
 
   const iftarTime = format12h(timings?.Maghrib);
   const displayCity = city || "Berhampur";
-  
-  // Real Hijri Date Display for India with adjustment applied via API
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
-
   const lastReadSurahId = userProfile?.lastRead?.surahId;
 
+  const handleShareDua = () => {
+    if (!todayDua) return;
+    const shareData = {
+      title: `Today's Dua: ${todayDua.title}`,
+      text: `${todayDua.arabic}\n\n${todayDua.translation_en}\n\nShared via NoorRamadan`,
+      url: window.location.origin + `/app/duas/${todayDua.id}`,
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        navigator.clipboard.writeText(shareData.text);
+        toast({ title: "Copied!", description: "Dua copied to clipboard." });
+      });
+    } else {
+      navigator.clipboard.writeText(shareData.text);
+      toast({ title: "Copied!", description: "Dua copied to clipboard." });
+    }
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-10">
       <section className="flex flex-col gap-1">
         <div className="flex justify-between items-start">
           <h2 className="text-3xl font-black tracking-tight">
@@ -150,7 +179,9 @@ export default function HomeDashboard() {
           <CardTitle className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-primary/60">
             <Sparkles className="w-3.5 h-3.5" /> Today's Dua
           </CardTitle>
-          <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black uppercase rounded-full px-4">Share</Button>
+          <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black uppercase rounded-full px-4" onClick={handleShareDua}>
+            <Share2 className="w-3 h-3 mr-2" /> Share
+          </Button>
         </CardHeader>
         <CardContent className="pt-8 px-8 space-y-6">
           {loadingDuas ? (

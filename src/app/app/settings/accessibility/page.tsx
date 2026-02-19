@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 
 export default function AccessibilitySettingsPage() {
   const router = useRouter();
-  const { arabicFontSize, setArabicFontSize, theme, setTheme } = useAppSettings();
+  const { arabicFontSize, setArabicFontSize, uiTextSize, setUiTextSize, theme, setTheme } = useAppSettings();
 
   return (
     <div className="space-y-8 pb-24">
@@ -38,12 +38,40 @@ export default function AccessibilitySettingsPage() {
           </div>
           <div className="px-4">
              <Slider 
-                defaultValue={[arabicFontSize === 'small' ? 0 : arabicFontSize === 'medium' ? 50 : 100]} 
+                value={[arabicFontSize === 'small' ? 0 : arabicFontSize === 'medium' ? 50 : 100]} 
                 max={100} 
                 step={50}
                 onValueChange={(v) => {
                   const s = v[0] === 0 ? 'small' : v[0] === 50 ? 'medium' : 'large';
                   setArabicFontSize(s);
+                }}
+             />
+             <div className="flex justify-between mt-4 text-[10px] font-black uppercase text-muted-foreground">
+               <span>Small</span>
+               <span>Medium</span>
+               <span>Large</span>
+             </div>
+          </div>
+        </Card>
+      </section>
+
+      <section className="space-y-4">
+        <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-4">App Text Scaling</h3>
+        <Card className="border-none shadow-sm rounded-[2.5rem] p-10 space-y-10">
+          <div className="bg-secondary/20 p-8 rounded-3xl text-center">
+             <p className={cn(
+               "font-bold transition-all",
+               uiTextSize === 'small' ? 'text-xs' : uiTextSize === 'medium' ? 'text-base' : 'text-xl'
+             )}>This is a sample of app text.</p>
+          </div>
+          <div className="px-4">
+             <Slider 
+                value={[uiTextSize === 'small' ? 0 : uiTextSize === 'medium' ? 50 : 100]} 
+                max={100} 
+                step={50}
+                onValueChange={(v) => {
+                  const s = v[0] === 0 ? 'small' : v[0] === 50 ? 'medium' : 'large';
+                  setUiTextSize(s);
                 }}
              />
              <div className="flex justify-between mt-4 text-[10px] font-black uppercase text-muted-foreground">

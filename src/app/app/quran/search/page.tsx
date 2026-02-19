@@ -4,14 +4,23 @@
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, History, ChevronRight } from 'lucide-react';
+import { Search, History, ChevronRight, X } from 'lucide-react';
 import { quranService, Surah } from '@/services/quranService';
 import Link from 'next/link';
 
 export default function QuranSearchPage() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Surah[]>([]);
-  const [history, setHistory] = useState<string[]>(['Al-Baqarah', 'Juz 1']);
+  const [history, setHistory] = useState<string[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('quran_search_history');
+    if (saved) {
+      setHistory(JSON.parse(saved));
+    } else {
+      setHistory(['Al-Baqarah', 'Al-Fatiha']);
+    }
+  }, []);
 
   useEffect(() => {
     if (query.length > 1) {
@@ -20,6 +29,18 @@ export default function QuranSearchPage() {
       setResults([]);
     }
   }, [query]);
+
+  const addToHistory = (q: string) => {
+    if (!q || history.includes(q)) return;
+    const newHistory = [q, ...history].slice(0, 10);
+    setHistory(newHistory);
+    localStorage.setItem('quran_search_history', JSON.stringify(newHistory));
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    localStorage.removeItem('quran_search_history');
+  };
 
   return (
     <div className="space-y-6">
@@ -41,11 +62,16 @@ export default function QuranSearchPage() {
         </div>
       </div>
 
-      {query.length === 0 && (
+      {query.length === 0 && history.length > 0 && (
         <div className="space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-            <History className="w-3 h-3" /> Recent Searches
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <History className="w-3 h-3" /> Recent Searches
+            </h3>
+            <button onClick={clearHistory} className="text-[10px] font-black uppercase text-red-500 hover:opacity-70 flex items-center gap-1">
+              <X className="w-3 h-3" /> Clear
+            </button>
+          </div>
           <div className="flex flex-wrap gap-2">
             {history.map(h => (
               <button 
@@ -62,7 +88,7 @@ export default function QuranSearchPage() {
 
       <div className="space-y-2">
         {results.map(surah => (
-          <Link key={surah.id} href={`/app/quran/${surah.index}`}>
+          <Link key={surah.id} href={`/app/quran/${surah.index}`} onClick={() => addToHistory(surah.nameEnglish)}>
             <Card className="hover:bg-secondary/20 transition-colors border-none shadow-sm rounded-2xl overflow-hidden">
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-4">

@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useState, useEffect } from 'react';
@@ -6,11 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, where, orderBy, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { ChevronLeft, Share2, Bookmark, Heart, Play, Sparkles } from 'lucide-react';
+import { ChevronLeft, Share2, Bookmark, Heart, Play, Sparkles, Volume2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { toast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
 export default function SurahDetailsPage() {
   const params = useParams();
@@ -19,16 +22,7 @@ export default function SurahDetailsPage() {
   const db = useFirestore();
   const { ensureGuestAuth } = useAppSettings();
   const [activeTranslation, setActiveTranslation] = useState('en');
-  const [surah, setSurah] = useState<any>(null);
-
-  // Fetch Surah info
-  useEffect(() => {
-    const surahRef = query(collection(db, 'quran_surahs'), where('index', '==', surahIndex));
-    getDoc(doc(db, 'quran_surahs', String(surahIndex))).then(snap => {
-      // For simple indexing, assuming ID is index for seeded data
-    });
-    // Fallback: finding in seeded list if not loaded yet
-  }, [surahIndex, db]);
+  const [isAudioSheetOpen, setIsAudioSheetOpen] = useState(false);
 
   const ayahsQuery = useMemoFirebase(() => {
     return query(
@@ -40,7 +34,6 @@ export default function SurahDetailsPage() {
 
   const { data: ayahs, isLoading } = useCollection(ayahsQuery);
 
-  // Update last read
   useEffect(() => {
     if (user) {
       setDoc(doc(db, 'users', user.uid), {
@@ -48,6 +41,24 @@ export default function SurahDetailsPage() {
       }, { merge: true });
     }
   }, [user, surahIndex, db]);
+
+  const handleShareSurah = () => {
+    const shareData = {
+      title: `Surah ${surahIndex}`,
+      text: `Reading Surah ${surahIndex} on NoorRamadan.\n\nExplore more on NoorRamadan!`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        navigator.clipboard.writeText(shareData.url);
+        toast({ title: "Link Copied", description: "Share link copied to clipboard." });
+      });
+    } else {
+      navigator.clipboard.writeText(shareData.url);
+      toast({ title: "Link Copied", description: "Share link copied to clipboard." });
+    }
+  };
 
   return (
     <div className="space-y-6 pb-20">
@@ -58,7 +69,7 @@ export default function SurahDetailsPage() {
           </Link>
         </Button>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-full">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-full" onClick={handleShareSurah}>
             <Share2 className="w-4 h-4" />
           </Button>
         </div>
@@ -71,6 +82,9 @@ export default function SurahDetailsPage() {
           <div className="flex items-center justify-center gap-3 pt-6">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] bg-white/15 px-4 py-1.5 rounded-full backdrop-blur-md">Noble Quran</span>
           </div>
+          <Button variant="ghost" className="mt-4 bg-white/10 rounded-full text-xs font-black uppercase tracking-widest text-white hover:bg-white/20" onClick={() => setIsAudioSheetOpen(true)}>
+             <Play className="w-4 h-4 mr-2" /> Play Recitation
+          </Button>
         </CardContent>
       </Card>
 
@@ -94,14 +108,33 @@ export default function SurahDetailsPage() {
             </div>
           ))
         ) : ayahs?.map((ayah) => (
-          <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} ensureGuestAuth={ensureGuestAuth} />
+          <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} ensureGuestAuth={() => {}} onAudioClick={() => setIsAudioSheetOpen(true)} />
         ))}
       </div>
+
+      <Sheet open={isAudioSheetOpen} onOpenChange={setIsAudioSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-[3rem] p-10 h-[40vh]">
+          <SheetHeader className="text-center space-y-4">
+            <div className="w-16 h-16 bg-primary/5 rounded-3xl flex items-center justify-center mx-auto mb-2">
+              <Volume2 className="w-8 h-8 text-primary" />
+            </div>
+            <SheetTitle className="text-3xl font-black">Audio Coming Soon</SheetTitle>
+            <SheetDescription className="text-lg font-bold text-muted-foreground">
+              We are carefully selecting premium recitations for a soulful experience. Stay tuned!
+            </SheetDescription>
+          </SheetHeader>
+          <div className="mt-8 flex justify-center">
+            <Button className="rounded-full px-12 h-14 font-black shadow-xl" onClick={() => setIsAudioSheetOpen(false)}>
+              Alhamdulillah
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
 
-function AyahRow({ ayah, activeTranslation, ensureGuestAuth }: { ayah: any, activeTranslation: string, ensureGuestAuth: any }) {
+function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeTranslation: string, ensureGuestAuth: any, onAudioClick: () => void }) {
   const db = useFirestore();
   const { user } = useUser();
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -114,8 +147,11 @@ function AyahRow({ ayah, activeTranslation, ensureGuestAuth }: { ayah: any, acti
   }, [user, ayah, db]);
 
   const handleBookmark = async () => {
-    const uid = await ensureGuestAuth();
-    const ref = doc(db, 'users', uid, 'bookmarks', `${ayah.surahId}_${ayah.ayahNo}`);
+    if (!user) {
+      toast({ title: "Please Login", description: "Sign in to save bookmarks." });
+      return;
+    }
+    const ref = doc(db, 'users', user.uid, 'bookmarks', `${ayah.surahId}_${ayah.ayahNo}`);
     if (isBookmarked) {
       await deleteDoc(ref);
       setIsBookmarked(false);
@@ -126,6 +162,7 @@ function AyahRow({ ayah, activeTranslation, ensureGuestAuth }: { ayah: any, acti
         createdAt: new Date().toISOString() 
       });
       setIsBookmarked(true);
+      toast({ title: "Ayah Saved", description: "Bookmark added successfully." });
     }
   };
 
@@ -144,6 +181,9 @@ function AyahRow({ ayah, activeTranslation, ensureGuestAuth }: { ayah: any, acti
           {ayah.ayahNo}
         </div>
         <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-primary/40 hover:text-primary" onClick={onAudioClick}>
+            <Volume2 className="w-5 h-5" />
+          </Button>
           <Button 
             variant="ghost" 
             size="icon" 

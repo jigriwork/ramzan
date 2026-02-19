@@ -33,6 +33,25 @@ export default function DuaDetailPage() {
     toast({ title: "Copied", description: "Text copied to clipboard." });
   };
 
+  const handleShare = () => {
+    if (!dua) return;
+    const shareData = {
+      title: dua.title,
+      text: `${dua.arabic}\n\n${dua.translation_en}\n\nShared via NoorRamadan`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      navigator.share(shareData).catch(() => {
+        navigator.clipboard.writeText(shareData.url);
+        toast({ title: "Link Copied", description: "Dua link copied to clipboard." });
+      });
+    } else {
+      navigator.clipboard.writeText(shareData.url);
+      toast({ title: "Link Copied", description: "Dua link copied to clipboard." });
+    }
+  };
+
   const toggleFav = () => {
     const newFavs = duaService.toggleFavorite(dua!.id);
     setIsFavorite(newFavs.includes(dua!.id));
@@ -49,8 +68,8 @@ export default function DuaDetailPage() {
           <ChevronLeft className="w-6 h-6" />
         </Button>
         <div className="flex gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => handleCopy(dua.arabic)}>
-            <Copy className="w-5 h-5" />
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={handleShare}>
+            <Share2 className="w-5 h-5" />
           </Button>
           <Button variant="ghost" size="icon" className={`rounded-full ${isFavorite ? 'text-pink-500 bg-pink-50' : ''}`} onClick={toggleFav}>
             <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
@@ -78,15 +97,30 @@ export default function DuaDetailPage() {
               </p>
             </div>
           </div>
+          <div className="flex justify-center pt-6">
+             <Button variant="secondary" className="rounded-full px-8" onClick={() => handleCopy(dua.arabic)}>
+               <Copy className="w-4 h-4 mr-2" /> Copy Arabic
+             </Button>
+          </div>
         </CardContent>
       </Card>
 
       <section className="space-y-4">
-        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground ml-4">Related</h3>
-        <div className="grid grid-cols-1 gap-4">
-           {/* Placeholder for related */}
-           <p className="text-center text-sm text-muted-foreground">More daily supplications coming soon.</p>
-        </div>
+        <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground ml-4">Audio</h3>
+        <Card className="border-none shadow-sm rounded-3xl p-6 bg-white flex items-center justify-between">
+           <div className="flex items-center gap-4">
+             <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
+               <Volume2 className="w-5 h-5 text-primary" />
+             </div>
+             <div>
+               <p className="font-bold">Play Recitation</p>
+               <p className="text-xs text-muted-foreground">Premium audio coming soon</p>
+             </div>
+           </div>
+           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast({ title: "Coming Soon", description: "Audio recitations are being prepared." })}>
+             <ChevronLeft className="w-5 h-5 rotate-180 opacity-30" />
+           </Button>
+        </Card>
       </section>
     </div>
   );
