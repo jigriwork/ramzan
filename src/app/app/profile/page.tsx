@@ -5,19 +5,21 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useUser, useAuth } from '@/firebase';
+import { useUser, useAuth, useFirestore } from '@/firebase';
 import { signOut, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { User, LogOut, Settings, Bell, Globe, ShieldCheck, MapPin, ChevronRight, Sparkles, Mail, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Link from 'next/link';
 import { toast } from '@/hooks/use-toast';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const router = useRouter();
+  const { mode, setMode, theme, setTheme, city } = useAppSettings();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,6 +28,7 @@ export default function ProfilePage() {
     try {
       await signOut(auth);
       toast({ title: "Logged out", description: "You have been successfully signed out." });
+      router.push('/');
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to sign out." });
     }
@@ -54,7 +57,6 @@ export default function ProfilePage() {
       <header className="flex flex-col items-center text-center space-y-6 pt-8">
         <div className="relative">
           <Avatar className="h-32 w-32 border-4 border-white shadow-2xl">
-            <AvatarImage src="" />
             <AvatarFallback className="text-4xl bg-primary/5 text-primary font-bold">
               {user?.displayName?.[0] || user?.email?.[0] || <User className="w-12 h-12" />}
             </AvatarFallback>
@@ -67,17 +69,12 @@ export default function ProfilePage() {
         </div>
         <div className="space-y-1">
           <h2 className="text-4xl font-black tracking-tight">
-            {isGuest ? "Guest Traveler" : user?.displayName || "Salaam!"}
+            {isGuest ? "Guest Traveler" : user?.displayName || user?.email?.split('@')[0] || "Salaam!"}
           </h2>
           <p className="text-muted-foreground font-medium">
             {isGuest ? "Temporary Guest Account" : user?.email}
           </p>
         </div>
-        {!isGuest && (
-          <Button variant="outline" className="rounded-full px-10 h-12 font-bold border-2 hover:bg-primary hover:text-white transition-all">
-            Edit Profile
-          </Button>
-        )}
       </header>
 
       {isGuest && (
@@ -132,12 +129,14 @@ export default function ProfilePage() {
       <section className="space-y-4">
         <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-4">Preferences</h3>
         <Card className="border-none shadow-sm divide-y overflow-hidden rounded-[2rem] bg-white">
-          <SettingItem 
-            icon={<MapPin className="text-blue-500" />} 
-            label="Location Settings" 
-            value="Mumbai, India"
-            isAction
-          />
+          <div onClick={() => router.push('/app/timings')}>
+            <SettingItem 
+              icon={<MapPin className="text-blue-500" />} 
+              label="Location Settings" 
+              value={city || "Set City"}
+              isAction
+            />
+          </div>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
@@ -148,7 +147,11 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground font-medium">Simplified UI for children</p>
               </div>
             </div>
-            <Switch className="data-[state=checked]:bg-amber-500" />
+            <Switch 
+              checked={mode === 'kids'} 
+              onCheckedChange={(checked) => setMode(checked ? 'kids' : 'adult')}
+              className="data-[state=checked]:bg-amber-500" 
+            />
           </div>
           <div className="p-6 flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -156,38 +159,20 @@ export default function ProfilePage() {
                 <Bell className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="font-bold text-lg">Notifications</p>
-                <p className="text-sm text-muted-foreground font-medium">Prayer & Iftar alerts</p>
+                <p className="font-bold text-lg">Dark Theme</p>
+                <p className="text-sm text-muted-foreground font-medium">Protect your eyes</p>
               </div>
             </div>
-            <Switch defaultChecked />
+            <Switch 
+              checked={theme === 'dark'} 
+              onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
+              defaultChecked 
+            />
           </div>
-          <SettingItem 
-            icon={<Globe className="text-emerald-500" />} 
-            label="Quran Translation" 
-            value="English (Sahih)"
-            isAction
-          />
         </Card>
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-4">App Info</h3>
-        <Card className="border-none shadow-sm divide-y overflow-hidden rounded-[2rem] bg-white">
-          <SettingItem 
-            icon={<ShieldCheck className="text-purple-500" />} 
-            label="Privacy & Security" 
-            isAction
-          />
-          <SettingItem 
-            icon={<Settings className="text-gray-500" />} 
-            label="About NoorRamadan" 
-            isAction
-          />
-        </Card>
-      </section>
-
-      {!isGuest && (
+      {!isGuest && !isUserLoading && (
         <Button 
           variant="destructive" 
           className="w-full h-16 rounded-3xl font-black text-lg shadow-xl shadow-destructive/10 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white transition-all border-none" 
@@ -196,12 +181,6 @@ export default function ProfilePage() {
           <LogOut className="w-5 h-5 mr-3" /> Log Out From App
         </Button>
       )}
-
-      <div className="text-center space-y-2">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground/40 font-black">
-          NoorRamadan Version 1.0.0
-        </p>
-      </div>
     </div>
   );
 }
