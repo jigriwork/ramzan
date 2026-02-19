@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser, useAuth, useFirestore } from '@/firebase';
 import { signOut, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { User, LogOut, Settings, Bell, Globe, ShieldCheck, MapPin, ChevronRight, Sparkles, Mail, Lock, Database } from 'lucide-react';
+import { User, LogOut, Settings, Bell, Globe, ShieldCheck, MapPin, ChevronRight, Sparkles, Mail, Lock, Database, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
@@ -184,7 +184,6 @@ export default function ProfilePage() {
             <Switch 
               checked={theme === 'dark'} 
               onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
-              defaultChecked 
             />
           </div>
           <div className="p-6 flex items-center justify-between group cursor-pointer hover:bg-secondary/20 transition-all" onClick={handleSeed}>
