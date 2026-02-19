@@ -15,6 +15,12 @@ export default function TimingsPage() {
   const [searchInput, setSearchInput] = useState('');
   const [timings, setTimings] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [currentDateDisplay, setCurrentDateDisplay] = useState<string>('');
+
+  useEffect(() => {
+    // Prevent hydration mismatch by setting the date display after mount
+    setCurrentDateDisplay(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }));
+  }, []);
 
   const fetchTimings = async (cityName: string) => {
     if (!cityName) return;
@@ -111,7 +117,7 @@ export default function TimingsPage() {
               <CardTitle className="text-lg flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-primary" /> Today's Schedule
               </CardTitle>
-              <span className="text-sm font-bold text-primary px-3 py-1 rounded-full italic">{new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}</span>
+              <span className="text-sm font-bold text-primary px-3 py-1 rounded-full italic">{currentDateDisplay || "Loading..."}</span>
             </CardHeader>
             <CardContent className="p-0">
               <div className="divide-y">

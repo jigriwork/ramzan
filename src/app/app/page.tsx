@@ -20,19 +20,24 @@ export default function HomeDashboard() {
   const [timings, setTimings] = useState<any>(null);
   const [hijri, setHijri] = useState<any>(null);
   const [loadingTimings, setLoadingTimings] = useState(false);
-  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+  const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
   // Real-time update for time and day transitions
   useEffect(() => {
+    const initialDate = new Date();
+    setCurrentTime(initialDate);
+    const initialDay = initialDate.getDate();
+
     const timer = setInterval(() => {
       const now = new Date();
-      if (now.getDate() !== currentTime.getDate()) {
+      setCurrentTime(now);
+      // Check if the day has changed to reload regional data
+      if (now.getDate() !== initialDay) {
         window.location.reload();
       }
-      setCurrentTime(now);
     }, 1000);
     return () => clearInterval(timer);
-  }, [currentTime]);
+  }, []);
 
   // Fetch User Profile for lastRead
   const userRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
@@ -70,7 +75,7 @@ export default function HomeDashboard() {
           setHijri(data.data.date.hijri);
         }
       } catch (error) {
-        console.error("Failed to fetch timings", error);
+        // Error handled by missing timings state
       } finally {
         setLoadingTimings(false);
       }
@@ -123,7 +128,7 @@ export default function HomeDashboard() {
           <p className="text-muted-foreground font-bold text-primary">{hijriDisplay}</p>
           <div className="w-1.5 h-1.5 bg-primary/20 rounded-full" />
           <p className="text-muted-foreground font-medium">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+            {currentTime ? currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }) : "--:--"}
           </p>
         </div>
       </section>
