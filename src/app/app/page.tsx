@@ -1,23 +1,57 @@
+"use client"
+
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles } from 'lucide-react';
-import { DUAS } from '@/lib/data/seed';
+import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2 } from 'lucide-react';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, limit } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function HomeDashboard() {
-  // Mock data for display
-  const todayDua = DUAS[Math.floor(Math.random() * DUAS.length)];
-  const ramadanDay = 15;
-  const nextPrayer = "Asr";
-  const countdown = "01:42:00";
-  const iftarTime = "6:45 PM";
-  const city = "Mumbai";
+  const { city } = useAppSettings();
+  const { user } = useUser();
+  const db = useFirestore();
+  const [timings, setTimings] = useState<any>(null);
+  const [loadingTimings, setLoadingTimings] = useState(false);
+
+  // Fetch a random Dua for the day
+  const duasQuery = useMemoFirebase(() => query(collection(db, 'duas'), limit(1)), [db]);
+  const { data: duas, isLoading: loadingDuas } = useCollection(duasQuery);
+  const todayDua = duas?.[0];
+
+  useEffect(() => {
+    async function fetchTimings() {
+      const targetCity = city || 'Berhampur';
+      setLoadingTimings(true);
+      try {
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=2`);
+        const data = await response.json();
+        if (data.code === 200) {
+          setTimings(data.data.timings);
+        }
+      } catch (error) {
+        console.error("Failed to fetch timings", error);
+      } finally {
+        setLoadingTimings(false);
+      }
+    }
+    fetchTimings();
+  }, [city]);
+
+  const ramadanDay = 15; // Static for Phase 1
+  const iftarTime = timings?.Maghrib || "--:--";
+  const displayCity = city || "Set Location";
 
   return (
     <div className="space-y-8">
       <section className="flex flex-col gap-1">
-        <h2 className="text-3xl font-black tracking-tight">Salam, Abdullah</h2>
+        <h2 className="text-3xl font-black tracking-tight">
+          Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "User")}
+        </h2>
         <p className="text-muted-foreground font-medium">Ramadan Day {ramadanDay} • 1445 AH</p>
       </section>
 
@@ -28,24 +62,32 @@ export default function HomeDashboard() {
         <CardHeader className="pb-2 px-8 pt-8">
           <div className="flex justify-between items-center">
             <CardTitle className="text-primary-foreground/60 font-bold text-[10px] uppercase tracking-[0.2em] flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5" /> {city}
+              <MapPin className="w-3.5 h-3.5" /> {displayCity}
             </CardTitle>
-            <span className="text-[10px] font-black bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider">Fast Schedule</span>
+            <Link href="/app/timings">
+              <span className="text-[10px] font-black bg-white/10 px-4 py-1.5 rounded-full backdrop-blur-md uppercase tracking-wider hover:bg-white/20 transition-all cursor-pointer">
+                Full Schedule
+              </span>
+            </Link>
           </div>
         </CardHeader>
         <CardContent className="px-8 pb-8">
           <div className="flex flex-col items-center text-center py-6">
             <p className="text-base font-medium text-primary-foreground/60 mb-2">Iftar Today at</p>
-            <h3 className="text-7xl font-black mb-8 tracking-tighter">{iftarTime}</h3>
+            {loadingTimings ? (
+              <Loader2 className="w-12 h-12 animate-spin my-4 opacity-50" />
+            ) : (
+              <h3 className="text-7xl font-black mb-8 tracking-tighter">{iftarTime}</h3>
+            )}
             <div className="w-full h-px bg-white/10 mb-8" />
             <div className="flex justify-between w-full">
               <div className="text-left">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Next Prayer</p>
-                <p className="font-bold text-xl">{nextPrayer}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Fajr (Sehri Ends)</p>
+                <p className="font-bold text-xl">{timings?.Fajr || "--:--"}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Countdown</p>
-                <p className="font-bold text-xl">{countdown}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Sunrise</p>
+                <p className="font-bold text-xl">{timings?.Sunrise || "--:--"}</p>
               </div>
             </div>
           </div>
@@ -67,19 +109,30 @@ export default function HomeDashboard() {
           <Button variant="ghost" size="sm" className="h-7 text-[10px] font-black uppercase rounded-full px-4">Share</Button>
         </CardHeader>
         <CardContent className="pt-8 px-8 space-y-6">
-          <p className="text-3xl arabic-font">{todayDua.arabic}</p>
-          <div className="space-y-2 pb-2">
-             <p className="text-sm font-medium italic text-muted-foreground/60 leading-relaxed">{todayDua.transliteration}</p>
-             <p className="text-base font-medium leading-relaxed">{todayDua.translation_en}</p>
-          </div>
+          {loadingDuas ? (
+            <div className="space-y-4">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </div>
+          ) : todayDua ? (
+            <>
+              <p className="text-3xl arabic-font">{todayDua.arabic}</p>
+              <div className="space-y-2 pb-2">
+                 <p className="text-sm font-medium italic text-muted-foreground/60 leading-relaxed">{todayDua.transliteration}</p>
+                 <p className="text-base font-medium leading-relaxed">{todayDua.translation_en}</p>
+              </div>
+            </>
+          ) : (
+            <p className="text-muted-foreground text-center py-4">Seek knowledge and keep praying.</p>
+          )}
         </CardContent>
       </Card>
 
       <Card className="border-none shadow-sm bg-gradient-to-br from-indigo-500/5 to-purple-500/5 rounded-[2rem]">
         <CardContent className="p-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-black text-sm uppercase tracking-widest text-primary/60">Continue Journey</h3>
-            <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full">65%</span>
+            <h3 className="font-black text-sm uppercase tracking-widest text-primary/60">Your Journey</h3>
+            <span className="text-[10px] font-black text-primary bg-primary/5 px-3 py-1 rounded-full italic">Ready to learn</span>
           </div>
           <div className="space-y-4">
             <div className="flex items-center gap-5 p-4 bg-white rounded-3xl shadow-sm border border-transparent hover:border-primary/10 transition-all">
@@ -87,11 +140,11 @@ export default function HomeDashboard() {
                 <BookOpen className="w-6 h-6 text-primary" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Last Read</p>
-                <p className="font-bold text-base">Al-Fatiha, Ayah 3</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-0.5">Start Reading</p>
+                <p className="font-bold text-base">Al-Fatiha, Ayah 1</p>
               </div>
               <Button size="sm" variant="ghost" className="rounded-full font-black text-[10px] uppercase tracking-wider" asChild>
-                <Link href="/app/quran">Open</Link>
+                <Link href="/app/quran/1">Open</Link>
               </Button>
             </div>
           </div>

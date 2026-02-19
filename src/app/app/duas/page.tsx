@@ -4,16 +4,28 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { DUAS } from '@/lib/data/seed';
-import { Search, Heart, Copy, Share2 } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, query, orderBy, doc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
+import { Search, Heart, Copy, Share2, Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/hooks/use-toast';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
 export default function DuasPage() {
-  const categories = ['All', 'Sehri', 'Iftar', 'After Salah', 'Daily Life'];
+  const db = useFirestore();
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  
+  const categories = ['All', 'Sehri', 'Iftar', 'After Salah', 'Daily Life'];
 
-  const filteredDuas = selectedCategory === 'All' 
-    ? DUAS 
-    : DUAS.filter(d => d.category === selectedCategory);
+  const duasQuery = useMemoFirebase(() => query(collection(db, 'duas'), orderBy('title', 'asc')), [db]);
+  const { data: duas, isLoading } = useCollection(duasQuery);
+
+  const filteredDuas = (duas || []).filter(d => {
+    const matchesSearch = d.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'All' || d.category === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
 
   return (
     <div className="space-y-6 pb-20">
@@ -24,7 +36,12 @@ export default function DuasPage() {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-        <Input placeholder="Search duas..." className="pl-10 h-12 rounded-2xl shadow-sm border-none bg-white" />
+        <Input 
+          placeholder="Search duas..." 
+          className="pl-10 h-12 rounded-2xl shadow-sm border-none bg-white" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar">
@@ -41,33 +58,65 @@ export default function DuasPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {filteredDuas.map((dua) => (
-          <DuaCard key={dua.id} dua={dua} />
-        ))}
+        {isLoading ? (
+          Array(3).fill(0).map((_, i) => (
+            <Skeleton key={i} className="h-64 w-full rounded-[2rem]" />
+          ))
+        ) : filteredDuas.length > 0 ? (
+          filteredDuas.map((dua) => (
+            <DuaCard key={dua.id} dua={dua} />
+          ))
+        ) : (
+          <div className="text-center py-20 text-muted-foreground">No duas found.</div>
+        )}
       </div>
     </div>
   );
 }
 
 function DuaCard({ dua }: { dua: any }) {
+  const { user } = useUser();
+  const db = useFirestore();
+  const { ensureGuestAuth } = useAppSettings();
   const [isFavorite, setIsFavorite] = useState(false);
+
+  React.useEffect(() => {
+    if (user) {
+      getDoc(doc(db, 'users', user.uid, 'favorite_duas', dua.id)).then(snap => setIsFavorite(snap.exists()));
+    }
+  }, [user, dua.id, db]);
+
+  const handleFavorite = async () => {
+    const uid = await ensureGuestAuth();
+    const ref = doc(db, 'users', uid, 'favorite_duas', dua.id);
+    if (isFavorite) {
+      await deleteDoc(ref);
+      setIsFavorite(false);
+    } else {
+      await setDoc(ref, { id: dua.id, createdAt: new Date().toISOString() });
+      setIsFavorite(true);
+      toast({ title: "Saved to favorites", description: "You can find this in your profile soon." });
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(`${dua.arabic}\n\n${dua.translation_en}`);
+    toast({ title: "Copied", description: "Dua copied to clipboard." });
+  };
 
   return (
     <Card className="border-none shadow-sm overflow-hidden rounded-[2rem] bg-white">
       <CardHeader className="bg-secondary/30 flex flex-row items-center justify-between py-5 px-6">
         <CardTitle className="text-lg font-bold">{dua.title}</CardTitle>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary rounded-full">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary rounded-full" onClick={copyToClipboard}>
             <Copy className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:text-primary rounded-full">
-            <Share2 className="w-4 h-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon" 
-            className={`h-9 w-9 rounded-full ${isFavorite ? 'text-pink-500' : 'text-muted-foreground'}`}
-            onClick={() => setIsFavorite(!isFavorite)}
+            className={`h-9 w-9 rounded-full ${isFavorite ? 'text-pink-500 bg-pink-50' : 'text-muted-foreground'}`}
+            onClick={handleFavorite}
           >
             <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
