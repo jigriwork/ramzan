@@ -10,17 +10,17 @@ service cloud.firestore {
     }
 
     // Public Collections: Allow anyone to read, authenticated users to seed/write
-    match /quran_surahs/{surahId} {
+    match /quran_surahs/{document=**} {
       allow read: if true;
       allow write: if isSignedIn();
     }
     
-    match /quran_ayahs/{ayahId} {
+    match /quran_ayahs/{document=**} {
       allow read: if true;
       allow write: if isSignedIn();
     }
     
-    match /duas/{duaId} {
+    match /duas/{document=**} {
       allow read: if true;
       allow write: if isSignedIn();
     }

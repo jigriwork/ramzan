@@ -34,7 +34,7 @@ export default function HomeDashboard() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        // Changed method to 1 (University of Islamic Sciences, Karachi) which is standard for India
+        // Method 1 is standard for India (University of Islamic Sciences, Karachi)
         const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1`);
         const data = await response.json();
         if (data.code === 200) {
@@ -53,10 +53,8 @@ export default function HomeDashboard() {
   const iftarTime = timings?.Maghrib || "--:--";
   const displayCity = city || "Berhampur";
   
-  const isRamadan = hijri?.month?.en === "Ramaḍān" || hijri?.month?.en === "Ramadan";
-  // The API day might still be off by 1 depending on moon sighting; for India Method 1 is generally correct.
+  // Real Hijri Date Display
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
-  const ramadanDayDisplay = isRamadan ? `Ramadan Day ${hijri.day}` : hijriDisplay;
 
   const lastReadSurahId = userProfile?.lastRead?.surahId;
 
@@ -66,7 +64,7 @@ export default function HomeDashboard() {
         <h2 className="text-3xl font-black tracking-tight">
           Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "Traveler")}
         </h2>
-        <p className="text-muted-foreground font-medium">{ramadanDayDisplay}</p>
+        <p className="text-muted-foreground font-medium">{hijriDisplay}</p>
       </section>
 
       <Card className="bg-primary text-white overflow-hidden border-none shadow-2xl shadow-primary/20 rounded-[2.5rem] relative">
