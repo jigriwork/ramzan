@@ -19,7 +19,8 @@ export default function TimingsPage() {
     if (!cityName) return;
     setLoading(true);
     try {
-      // Method 1 with adjustment=-1 for accurate Indian Hijri dating
+      // Method 1: University of Islamic Sciences, Karachi (Subcontinent)
+      // adjustment=-1: Explicitly adjust for Indian moon sighting
       const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1&adjustment=-1`);
       const data = await response.json();
       if (data.code === 200) {

@@ -19,6 +19,20 @@ export default function HomeDashboard() {
   const [timings, setTimings] = useState<any>(null);
   const [hijri, setHijri] = useState<any>(null);
   const [loadingTimings, setLoadingTimings] = useState(false);
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
+
+  // Real-time update for time and day transitions
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      if (now.getDate() !== currentTime.getDate()) {
+        // Refresh everything at midnight
+        window.location.reload();
+      }
+      setCurrentTime(now);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [currentTime]);
 
   // Fetch User Profile for lastRead
   const userRef = useMemoFirebase(() => (user ? doc(db, 'users', user.uid) : null), [db, user]);
@@ -34,8 +48,8 @@ export default function HomeDashboard() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        // Method 1 is standard for the Subcontinent (India/Pakistan)
-        // adjustment=-1 is applied to align with the Indian moon sighting
+        // Method 1: University of Islamic Sciences, Karachi (Standard for Subcontinent)
+        // adjustment=-1: Explicitly adjust for Indian moon sighting to ensure correct Day 1/2 display
         const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1&adjustment=-1`);
         const data = await response.json();
         if (data.code === 200) {
@@ -63,7 +77,7 @@ export default function HomeDashboard() {
   const iftarTime = format12h(timings?.Maghrib);
   const displayCity = city || "Berhampur";
   
-  // Real Hijri Date Display for India
+  // Real Hijri Date Display for India with adjustment
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
 
   const lastReadSurahId = userProfile?.lastRead?.surahId;
@@ -74,7 +88,11 @@ export default function HomeDashboard() {
         <h2 className="text-3xl font-black tracking-tight">
           Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "Traveler")}
         </h2>
-        <p className="text-muted-foreground font-medium">{hijriDisplay}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-muted-foreground font-medium">{hijriDisplay}</p>
+          <div className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
+          <p className="text-muted-foreground font-medium">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+        </div>
       </section>
 
       <Card className="bg-primary text-white overflow-hidden border-none shadow-2xl shadow-primary/20 rounded-[2.5rem] relative">

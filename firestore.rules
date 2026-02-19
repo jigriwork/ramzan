@@ -9,20 +9,30 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Public Collections: Allow anyone to read, including list and get
-    match /quran_surahs/{document=**} {
+    // Public Collections: Allow anyone to read (get and list)
+    // We use a more explicit match for collections to avoid 'list' permission issues in some clients
+    match /quran_surahs/{surahId} {
       allow read: if true;
       allow write: if isSignedIn();
     }
+    match /quran_surahs {
+      allow read: if true;
+    }
     
-    match /quran_ayahs/{document=**} {
+    match /quran_ayahs/{ayahId} {
       allow read: if true;
       allow write: if isSignedIn();
     }
+    match /quran_ayahs {
+      allow read: if true;
+    }
     
-    match /duas/{document=**} {
+    match /duas/{duaId} {
       allow read: if true;
       allow write: if isSignedIn();
+    }
+    match /duas {
+      allow read: if true;
     }
 
     // User Private Data
