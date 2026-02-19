@@ -18,51 +18,44 @@ export default function SurahDetailsPage() {
   return (
     <div className="space-y-6 pb-20">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" asChild className="-ml-2">
+        <Button variant="ghost" size="sm" asChild className="-ml-2 rounded-full font-semibold">
           <Link href="/app/quran">
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Quran
           </Link>
         </Button>
         <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-full">
             <Share2 className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground rounded-full">
             <Bookmark className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      <Card className="bg-primary text-white border-none shadow-xl shadow-primary/20 overflow-hidden text-center p-10">
-        <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-          <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
-            </pattern>
-            <rect width="100%" height="100%" fill="url(#grid)" />
-          </svg>
-        </div>
-        <CardContent className="space-y-2 relative">
-          <h2 className="text-4xl font-headline font-black">{surah.nameEnglish}</h2>
-          <p className="text-2xl font-bold arabic-font opacity-80">{surah.nameArabic}</p>
-          <div className="flex items-center justify-center gap-4 pt-4">
-            <span className="text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">{surah.ayahCount} Ayahs</span>
-            <span className="text-xs font-bold uppercase tracking-widest bg-white/20 px-3 py-1 rounded-full">Surah {surah.index}</span>
+      <Card className="bg-primary text-white border-none shadow-xl shadow-primary/10 overflow-hidden text-center p-10 rounded-[2.5rem] relative">
+        <div className="absolute inset-0 opacity-5 pointer-events-none islamic-pattern" />
+        <CardContent className="space-y-3 relative">
+          <h2 className="text-4xl font-black tracking-tight">{surah.nameEnglish}</h2>
+          <p className="text-3xl font-arabic opacity-80">{surah.nameArabic}</p>
+          <div className="flex items-center justify-center gap-3 pt-6">
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] bg-white/15 px-4 py-1.5 rounded-full backdrop-blur-md">{surah.ayahCount} Ayahs</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] bg-white/15 px-4 py-1.5 rounded-full backdrop-blur-md">Surah {surah.index}</span>
           </div>
         </CardContent>
       </Card>
 
-      <div className="sticky top-[64px] z-30 py-4 bg-background/95 backdrop-blur">
+      <div className="sticky top-[64px] z-30 py-4 bg-background/80 backdrop-blur-xl">
         <Tabs defaultValue="en" onValueChange={setActiveTranslation} className="w-full">
-          <TabsList className="grid grid-cols-3 w-full max-w-sm mx-auto h-12 rounded-2xl bg-secondary/50 p-1">
-            <TabsTrigger value="en" className="rounded-xl font-bold">English</TabsTrigger>
-            <TabsTrigger value="ur" className="rounded-xl font-bold">Urdu</TabsTrigger>
-            <TabsTrigger value="hi" className="rounded-xl font-bold">Hindi</TabsTrigger>
+          <TabsList className="grid grid-cols-3 w-full max-w-xs mx-auto h-11 rounded-full bg-secondary p-1">
+            <TabsTrigger value="en" className="rounded-full font-bold text-xs uppercase tracking-wider">English</TabsTrigger>
+            <TabsTrigger value="ur" className="rounded-full font-bold text-xs uppercase tracking-wider">Urdu</TabsTrigger>
+            <TabsTrigger value="hi" className="rounded-full font-bold text-xs uppercase tracking-wider">Hindi</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      <div className="space-y-8 mt-6">
+      <div className="space-y-4 mt-6">
         {QURAN_AYAH_MOCK.filter(a => a.surahId === surah.id).map((ayah) => (
           <AyahRow key={ayah.ayahNo} ayah={ayah} activeTranslation={activeTranslation} />
         ))}
@@ -84,19 +77,19 @@ function AyahRow({ ayah, activeTranslation }: { ayah: any, activeTranslation: st
   };
 
   return (
-    <div className="flex flex-col gap-6 p-4 md:p-6 rounded-3xl hover:bg-primary/5 transition-colors border border-transparent hover:border-primary/10 group">
+    <div className="flex flex-col gap-6 p-6 md:p-8 rounded-[2rem] hover:bg-white transition-all border border-transparent hover:border-primary/5 group shadow-sm hover:shadow-md">
       <div className="flex items-center justify-between">
-        <div className="w-10 h-10 rounded-full border-2 border-primary/20 flex items-center justify-center text-xs font-bold text-primary/60">
+        <div className="w-9 h-9 rounded-full bg-primary/5 flex items-center justify-center text-[10px] font-black text-primary">
           {ayah.ayahNo}
         </div>
-        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-primary/60 hover:text-primary rounded-full">
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-y-1 group-hover:translate-y-0">
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-primary/40 hover:text-primary rounded-full">
             <Play className="w-4 h-4" />
           </Button>
           <Button 
             variant="ghost" 
             size="icon" 
-            className={`h-8 w-8 rounded-full ${isBookmarked ? 'text-primary' : 'text-primary/60'}`}
+            className={`h-9 w-9 rounded-full ${isBookmarked ? 'text-primary' : 'text-primary/40'}`}
             onClick={() => setIsBookmarked(!isBookmarked)}
           >
             <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
@@ -104,7 +97,7 @@ function AyahRow({ ayah, activeTranslation }: { ayah: any, activeTranslation: st
           <Button 
              variant="ghost" 
              size="icon" 
-             className={`h-8 w-8 rounded-full ${isFavorite ? 'text-pink-500' : 'text-primary/60'}`}
+             className={`h-9 w-9 rounded-full ${isFavorite ? 'text-pink-500' : 'text-primary/40'}`}
              onClick={() => setIsFavorite(!isFavorite)}
           >
             <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
@@ -113,15 +106,15 @@ function AyahRow({ ayah, activeTranslation }: { ayah: any, activeTranslation: st
       </div>
 
       <div className="space-y-6">
-        <p className="text-3xl leading-loose text-right font-bold arabic-font tracking-wide">
+        <p className="text-4xl arabic-font tracking-normal">
           {ayah.arabic}
         </p>
         
         <div className="space-y-3">
-          <p className="text-sm font-medium italic text-primary/60 leading-relaxed">
+          <p className="text-sm font-medium italic text-muted-foreground/60 leading-relaxed">
             {ayah.transliteration}
           </p>
-          <p className={`text-lg leading-relaxed ${activeTranslation === 'ur' || activeTranslation === 'hi' ? 'font-bold' : ''}`}>
+          <p className={`text-lg leading-relaxed font-medium ${activeTranslation === 'ur' || activeTranslation === 'hi' ? 'ur-hi-text font-bold' : ''}`}>
             {getTranslation()}
           </p>
         </div>

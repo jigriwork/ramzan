@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 240 10% 96%;
+    --background: 240 10% 98%;
     --foreground: 275 60% 10%;
     --card: 0 0% 100%;
     --card-foreground: 275 60% 10%;
@@ -12,18 +12,18 @@
     --popover-foreground: 275 60% 10%;
     --primary: 275 100% 25%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 275 30% 90%;
+    --secondary: 275 30% 94%;
     --secondary-foreground: 275 100% 25%;
-    --muted: 240 5% 90%;
-    --muted-foreground: 275 20% 40%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 275 15% 35%; /* Darkened for better HI/UR contrast */
     --accent: 275 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 90%;
-    --input: 240 6% 90%;
+    --border: 240 6% 92%;
+    --input: 240 6% 92%;
     --ring: 275 100% 25%;
-    --radius: 1rem;
+    --radius: 1.25rem;
   }
   .dark {
     --background: 275 60% 5%;
@@ -37,7 +37,7 @@
     --secondary: 275 40% 15%;
     --secondary-foreground: 275 100% 70%;
     --muted: 275 40% 12%;
-    --muted-foreground: 275 20% 65%;
+    --muted-foreground: 275 20% 75%;
     --accent: 275 100% 50%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
@@ -53,19 +53,37 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body text-[16px] leading-relaxed;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-headline tracking-tight;
+    @apply font-headline font-bold tracking-tight;
   }
 }
 
 .bottom-nav-blur {
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .islamic-pattern {
-  background-image: radial-gradient(circle at 2px 2px, rgba(75, 0, 130, 0.05) 1px, transparent 0);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle at 2px 2px, rgba(75, 0, 130, 0.03) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.arabic-font {
+  @apply font-arabic leading-[1.8] text-right;
+  direction: rtl;
+}
+
+/* Better line-height for Urdu and Hindi */
+.ur-hi-text {
+  line-height: 1.8;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
