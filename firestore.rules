@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Public collections (read-only for everyone, write for admins only)
+    match /quran_surahs/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /quran_ayahs/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /duas/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Private user-specific data
+    match /users/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    match /bookmarks/{userId}/{document=**} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    match /favorites/{userId}/{document=**} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+    
+    match /learn_progress/{userId} {
+      allow read, write: if isSignedIn() && isOwner(userId);
+    }
+  }
+}
