@@ -37,8 +37,8 @@ export default function RegisterPage() {
           </CardHeader>
           <CardContent className="space-y-4">
              <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" type="text" placeholder="Abdullah Khan" />
+              <Label htmlFor="name">Name</Label>
+              <Input id="name" type="text" placeholder="Enter your name" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
