@@ -1,0 +1,428 @@
+{
+  "entities": {
+    "UserProfile": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserProfile",
+      "type": "object",
+      "description": "Represents a user's profile and personalized settings within the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the UserProfile entity (Firebase Auth UID)."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "city": {
+          "type": "string",
+          "description": "The user's selected city for prayer timings and Iftar notifications."
+        },
+        "mode": {
+          "type": "string",
+          "description": "User's learning mode preference, impacting UI and content complexity (e.g., 'adult' or 'kids')."
+        },
+        "theme": {
+          "type": "string",
+          "description": "User's preferred UI theme ('light', 'dark', or 'system')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the user profile was created.",
+          "format": "date-time"
+        },
+        "lastReadSurahId": {
+          "type": "string",
+          "description": "Reference to the ID of the last Quran Surah read by the user. (Relationship: QuranSurah 1:1 UserProfile)"
+        },
+        "lastReadAyahNo": {
+          "type": "number",
+          "description": "The number of the last Ayah read by the user within the `lastReadSurahId`."
+        },
+        "lastReadUpdatedAt": {
+          "type": "string",
+          "description": "Timestamp indicating when the user's last read Quran position was updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "mode",
+        "theme",
+        "createdAt"
+      ]
+    },
+    "QuranSurah": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuranSurah",
+      "type": "object",
+      "description": "Represents a Surah (chapter) from the Holy Quran, containing metadata about the chapter.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the QuranSurah entity (typically the Surah number as a string)."
+        },
+        "index": {
+          "type": "number",
+          "description": "The sequential order number of the Surah in the Quran."
+        },
+        "nameArabic": {
+          "type": "string",
+          "description": "The name of the Surah in Arabic."
+        },
+        "nameEnglish": {
+          "type": "string",
+          "description": "The name of the Surah in English."
+        },
+        "nameUrdu": {
+          "type": "string",
+          "description": "The name of the Surah in Urdu."
+        },
+        "nameHindi": {
+          "type": "string",
+          "description": "The name of the Surah in Hindi."
+        }
+      },
+      "required": [
+        "id",
+        "index",
+        "nameArabic",
+        "nameEnglish"
+      ]
+    },
+    "QuranAyah": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "QuranAyah",
+      "type": "object",
+      "description": "Represents a single Ayah (verse) from the Holy Quran, including its text and translations.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the QuranAyah entity (e.g., constructed as 'surahId_ayahNo')."
+        },
+        "surahId": {
+          "type": "string",
+          "description": "Reference to the QuranSurah this Ayah belongs to. (Relationship: QuranSurah 1:N QuranAyah)"
+        },
+        "ayahNo": {
+          "type": "number",
+          "description": "The sequential number of the Ayah within its Surah."
+        },
+        "arabic": {
+          "type": "string",
+          "description": "The Arabic text of the Ayah."
+        },
+        "transliteration": {
+          "type": "string",
+          "description": "Romanized transliteration of the Arabic text for pronunciation assistance."
+        },
+        "translationEn": {
+          "type": "string",
+          "description": "English translation of the Ayah."
+        },
+        "translationUr": {
+          "type": "string",
+          "description": "Urdu translation of the Ayah."
+        },
+        "translationHi": {
+          "type": "string",
+          "description": "Hindi translation of the Ayah."
+        }
+      },
+      "required": [
+        "id",
+        "surahId",
+        "ayahNo",
+        "arabic",
+        "transliteration",
+        "translationEn"
+      ]
+    },
+    "Dua": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Dua",
+      "type": "object",
+      "description": "Represents an Islamic prayer or supplication (Dua), available in multiple languages.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Dua entity."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or common name of the Dua."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category to which the Dua belongs (e.g., 'Sehri Dua', 'Iftar Dua', 'After Salah', 'Daily Life')."
+        },
+        "arabic": {
+          "type": "string",
+          "description": "The Arabic text of the Dua."
+        },
+        "transliteration": {
+          "type": "string",
+          "description": "Romanized transliteration of the Arabic Dua for pronunciation assistance."
+        },
+        "translationEn": {
+          "type": "string",
+          "description": "English translation of the Dua."
+        },
+        "translationUr": {
+          "type": "string",
+          "description": "Urdu translation of the Dua."
+        },
+        "translationHi": {
+          "type": "string",
+          "description": "Hindi translation of the Dua."
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "category",
+        "arabic",
+        "transliteration",
+        "translationEn"
+      ]
+    },
+    "Bookmark": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Bookmark",
+      "type": "object",
+      "description": "Represents a user's bookmarked Quran Ayah for quick access.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Bookmark entity (e.g., constructed as 'surahId_ayahNo')."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who created this bookmark. (Relationship: UserProfile 1:N Bookmark)"
+        },
+        "surahId": {
+          "type": "string",
+          "description": "Reference to the QuranSurah of the bookmarked Ayah. (Relationship: QuranSurah 1:N Bookmark)"
+        },
+        "ayahNo": {
+          "type": "number",
+          "description": "The number of the bookmarked Ayah within its Surah."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the bookmark was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "surahId",
+        "ayahNo",
+        "createdAt"
+      ]
+    },
+    "FavoriteDua": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "FavoriteDua",
+      "type": "object",
+      "description": "Represents a Dua that a user has marked as a favorite.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the FavoriteDua entity (same as the 'duaId')."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile who favorited this Dua. (Relationship: UserProfile 1:N FavoriteDua)"
+        },
+        "duaId": {
+          "type": "string",
+          "description": "Reference to the Dua that was favorited. (Relationship: Dua 1:N FavoriteDua)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the Dua was favorited.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "duaId",
+        "createdAt"
+      ]
+    },
+    "LearnProgress": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "LearnProgress",
+      "type": "object",
+      "description": "Tracks a user's progress through the step-by-step 'Learn Namaz' guide.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the LearnProgress entity (same as userId)."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the UserProfile whose learning progress this represents. (Relationship: UserProfile 1:1 LearnProgress)"
+        },
+        "completedStepIds": {
+          "type": "array",
+          "description": "An array of unique identifiers for the learning steps the user has completed.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the learning progress was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "completedStepIds",
+        "updatedAt"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/quran_surahs/{surahId}",
+        "definition": {
+          "entityName": "QuranSurah",
+          "schema": {
+            "$ref": "#/backend/entities/QuranSurah"
+          },
+          "description": "Public, read-only collection of Quran Surahs (chapters). Accessible by all users (authenticated or anonymous).",
+          "params": [
+            {
+              "name": "surahId",
+              "description": "The unique identifier for a specific Surah (e.g., '1', '112')."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/quran_ayahs/{ayahId}",
+        "definition": {
+          "entityName": "QuranAyah",
+          "schema": {
+            "$ref": "#/backend/entities/QuranAyah"
+          },
+          "description": "Public, read-only collection of Quran Ayahs (verses). Documents are identified by a combined ID like 'surahId_ayahNo'. Accessible by all users.",
+          "params": [
+            {
+              "name": "ayahId",
+              "description": "The unique identifier for a specific Ayah (e.g., '1_1' for Surah 1, Ayah 1)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/duas/{duaId}",
+        "definition": {
+          "entityName": "Dua",
+          "schema": {
+            "$ref": "#/backend/entities/Dua"
+          },
+          "description": "Public, read-only collection of Duas (supplications). Accessible by all users.",
+          "params": [
+            {
+              "name": "duaId",
+              "description": "The unique identifier for a specific Dua."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "UserProfile",
+          "schema": {
+            "$ref": "#/backend/entities/UserProfile"
+          },
+          "description": "Private profile information and settings for each user. Only the authenticated user matching '{userId}' can read and write their own profile. Includes 'lastReadSurahId', 'lastReadAyahNo', 'lastReadUpdatedAt' as denormalized fields for tracking the user's last Quran reading position.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/bookmarks/{bookmarkId}",
+        "definition": {
+          "entityName": "Bookmark",
+          "schema": {
+            "$ref": "#/backend/entities/Bookmark"
+          },
+          "description": "Private collection of Quran Ayah bookmarks for a specific user. Only the owner can manage their bookmarks. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            },
+            {
+              "name": "bookmarkId",
+              "description": "The unique identifier for a bookmarked Ayah, typically 'surahId_ayahNo'."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/favorite_duas/{favoriteDuaId}",
+        "definition": {
+          "entityName": "FavoriteDua",
+          "schema": {
+            "$ref": "#/backend/entities/FavoriteDua"
+          },
+          "description": "Private collection of favorited Duas for a specific user. Only the owner can manage their favorites. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            },
+            {
+              "name": "favoriteDuaId",
+              "description": "The unique identifier for a favorited Dua (same as duaId)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/learn_progress/progress",
+        "definition": {
+          "entityName": "LearnProgress",
+          "schema": {
+            "$ref": "#/backend/entities/LearnProgress"
+          },
+          "description": "Private document tracking the learning progress for a specific user in the 'Learn Namaz' guide. Only the owner can read and update their progress. The document ID is 'progress'. Includes denormalized 'userId' (matching the path wildcard) for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The Firebase Authentication UID of the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore structure is designed to be secure, scalable, and debuggable by strictly adhering to the core design principles.\n\nAuthorization Independence: For public content (Quran Surahs, Quran Ayahs, Duas), authorization is universally granted, requiring no specific context. For all user-specific data (UserProfile, Bookmarks, Favorite Duas, Learn Progress), the structure utilizes path-based ownership. Every user-owned document is nested under \"/users/{userId}/...\", where \"{userId}\" directly corresponds to the authenticated user's ID (\"request.auth.uid\"). This completely eliminates the need for get() calls in security rules to determine ownership or permissions, as the authorization context is inherently provided by the document's path. For example, a rule for \"/users/{userId}/bookmarks/{bookmarkId}\" only needs to verify \"request.auth.uid == userId\". Furthermore, denormalized \"userId\" fields are included in Bookmark, FavoriteDua, and LearnProgress documents. While the path provides the primary authorization context, this denormalization makes the owner's UID explicit within the document itself, enhancing clarity and debuggability, and further reinforcing authorization independence by ensuring all necessary data for a rule check is available directly on the document being accessed, rather than requiring a lookup to a parent.\n\nQAPs (Rules are not Filters): The design achieves Query-Safe list operations (QAPs) through structural segregation and explicit path-based ownership. Public collections like \"/quran_surahs\", \"/quran_ayahs\", and \"/duas\" are entirely separate from user data. Security rules will grant unrestricted read access to these collections, allowing clients to perform list queries (e.g., for all Surahs, or Duas by category) without any implicit filtering by rules, thus supporting efficient and predictable public data access. For private user data, the hierarchical path structure ensures that list operations are inherently query-safe. When a user requests their bookmarks from \"/users/{userId}/bookmarks\", the query is *already* scoped by their \"{userId}\" in the path. The security rules will then simply verify that \"request.auth.uid\" matches the \"{userId}\" in the path, preventing any unauthorized user from performing a list query that could return another user's private data. This design principle ensures that queries for private data are always explicitly limited by the authenticated user's context, rather than relying on server-side rule evaluation to filter a potentially broad and insecure request."
+  }
+}

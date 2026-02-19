@@ -1,44 +1,144 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper functions
+
+    /**
+     * NOORRAMZAN SECURITY RULES (PHASE 1)
+     * 
+     * Core Philosophy:
+     * This ruleset implements a strict User-Ownership model. While the application is 
+     * open for public browsing, all "save" actions (bookmarks, progress, profiles) 
+     * require a valid Firebase Auth UID (including Anonymous Auth). 
+     *
+     * Data Structure:
+     * 1. Public Content: /quran_surahs, /quran_ayahs, and /duas are read-only for everyone.
+     * 2. User Data: All private user information is nested under /users/{userId}/.
+     *
+     * Key Security Decisions:
+     * - Authorization Independence: We use path-based authorization. Access to a document
+     *   at /users/{userId}/... is granted if the authenticated UID matches {userId}.
+     * - Prototyping Flexibility: We enforce ownership and relational integrity (linking 
+     *   the document to the user) but do not strictly validate the content schema 
+     *   (e.g., description length) to allow for rapid UI iteration.
+     * - Denormalization for Performance: Every user-owned document includes the owner's 
+     *   UID inside the data to ensure rules are fast and non-recursive.
+     */
+
+    // --- GLOBAL HELPER FUNCTIONS ---
+
+    /** @description Checks if the request is from an authenticated user (Email or Anonymous). */
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
+    /** @description Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
-      return request.auth.uid == userId;
+      return isSignedIn() && request.auth.uid == userId;
     }
 
-    // Public collections (read-only for everyone, write for admins only)
-    match /quran_surahs/{document=**} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /quran_ayahs/{document=**} {
-      allow read: if true;
-      allow write: if false;
-    }
-    match /duas/{document=**} {
-      allow read: if true;
-      allow write: if false;
+    /** @description Checks ownership and ensures the document already exists for destructive operations. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
     }
 
-    // Private user-specific data
+    // --- COLLECTION RULES ---
+
+    /**
+     * @description Public, read-only collection of Quran chapters.
+     * @path /quran_surahs/{surahId}
+     * @allow get, list: Always permitted for all users.
+     * @deny create, update, delete: All writes are forbidden (reserved for admin seeding).
+     * @principle Public Read with Restricted Writes.
+     */
+    match /quran_surahs/{surahId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Public, read-only collection of Quran verses.
+     * @path /quran_ayahs/{ayahId}
+     * @allow get, list: Always permitted for all users.
+     * @deny create, update, delete: All writes are forbidden.
+     * @principle Public Read with Restricted Writes.
+     */
+    match /quran_ayahs/{ayahId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Public, read-only collection of Islamic supplications.
+     * @path /duas/{duaId}
+     * @allow get, list: Always permitted for all users.
+     * @deny create, update, delete: All writes are forbidden.
+     * @principle Public Read with Restricted Writes.
+     */
+    match /duas/{duaId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description User profile settings and metadata.
+     * @path /users/{userId}
+     * @allow get: If the user is the owner.
+     * @deny list: Listing users is forbidden for privacy.
+     * @allow create: If auth.uid matches path and data.id matches path.
+     * @allow update: If owner and data.id is immutable.
+     * @principle Ownership and Relational Integrity.
+     */
     match /users/{userId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(userId);
     }
-    
-    match /bookmarks/{userId}/{document=**} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+
+    /**
+     * @description Individual Ayah bookmarks for a user.
+     * @path /users/{userId}/bookmarks/{bookmarkId}
+     * @allow get, list: If the user is the owner.
+     * @allow create: If owner and document userId matches the authenticated UID.
+     * @allow update: If owner and userId is immutable.
+     * @principle Path-based Ownership and Denormalized Link Validation.
+     */
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
-    
-    match /favorites/{userId}/{document=**} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+
+    /**
+     * @description User favorited Duas.
+     * @path /users/{userId}/favorite_duas/{favoriteDuaId}
+     * @allow get, list: If the user is the owner.
+     * @allow create: If owner and document userId matches the authenticated UID.
+     * @allow update: if owner and userId is immutable.
+     * @principle Path-based Ownership and Denormalized Link Validation.
+     */
+    match /users/{userId}/favorite_duas/{favoriteDuaId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
-    
-    match /learn_progress/{userId} {
-      allow read, write: if isSignedIn() && isOwner(userId);
+
+    /**
+     * @description Progress tracking for the 'Learn Namaz' guide.
+     * @path /users/{userId}/learn_progress/progress
+     * @allow get, list: If the user is the owner.
+     * @allow create: If owner and document userId matches the authenticated UID.
+     * @allow update: if owner and userId is immutable.
+     * @principle Path-based Ownership for a Singleton Document.
+     */
+    match /users/{userId}/learn_progress/progress {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
     }
   }
 }
