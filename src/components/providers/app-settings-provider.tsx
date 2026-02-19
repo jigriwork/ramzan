@@ -2,62 +2,55 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useUser, useFirestore } from '@/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { signInAnonymously, getAuth } from 'firebase/auth';
 
 type Theme = 'light' | 'dark' | 'system';
 type Mode = 'adult' | 'kids';
+type Language = 'en' | 'ur' | 'hi';
+type ArabicFontSize = 'small' | 'medium' | 'large';
 
 interface AppSettingsContextType {
   theme: Theme;
   mode: Mode;
   city: string;
+  language: Language;
+  showTransliteration: boolean;
+  arabicFontSize: ArabicFontSize;
   setTheme: (theme: Theme) => void;
   setMode: (mode: Mode) => void;
   setCity: (city: string) => void;
-  ensureGuestAuth: () => Promise<string>;
+  setLanguage: (lang: Language) => void;
+  setShowTransliteration: (show: boolean) => void;
+  setArabicFontSize: (size: ArabicFontSize) => void;
 }
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
 
 export function AppSettingsProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUser();
-  const db = useFirestore();
-  const auth = getAuth();
-  
   const [theme, setThemeState] = useState<Theme>('light');
   const [mode, setModeState] = useState<Mode>('adult');
-  const [city, setCityState] = useState<string>('');
+  const [city, setCityState] = useState<string>('Berhampur');
+  const [language, setLanguageState] = useState<Language>('en');
+  const [showTransliteration, setShowTransliterationState] = useState<boolean>(true);
+  const [arabicFontSize, setArabicFontSizeState] = useState<ArabicFontSize>('medium');
 
-  // Initial load from localStorage
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme;
-    const savedMode = localStorage.getItem('mode') as Mode;
-    const savedCity = localStorage.getItem('city');
+    const saved = {
+      theme: localStorage.getItem('app_theme') as Theme,
+      mode: localStorage.getItem('app_mode') as Mode,
+      city: localStorage.getItem('app_city'),
+      language: localStorage.getItem('app_lang') as Language,
+      trans: localStorage.getItem('app_trans') === 'false' ? false : true,
+      fontSize: localStorage.getItem('app_font_size') as ArabicFontSize,
+    };
 
-    if (savedTheme) setThemeState(savedTheme);
-    if (savedMode) setModeState(savedMode);
-    if (savedCity) setCityState(savedCity);
+    if (saved.theme) setThemeState(saved.theme);
+    if (saved.mode) setModeState(saved.mode);
+    if (saved.city) setCityState(saved.city);
+    if (saved.language) setLanguageState(saved.language);
+    setShowTransliterationState(saved.trans);
+    if (saved.fontSize) setArabicFontSizeState(saved.fontSize);
   }, []);
 
-  // sync from Firestore if user is logged in
-  useEffect(() => {
-    if (user) {
-      const userRef = doc(db, 'users', user.uid);
-      getDoc(userRef).then((snap) => {
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data.theme) setThemeState(data.theme);
-          if (data.mode) setModeState(data.mode);
-          if (data.city) setCityState(data.city);
-        }
-      });
-    }
-  }, [user, db]);
-
-  // Apply theme class to document
   useEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
@@ -67,43 +60,20 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     } else {
       root.classList.add(theme);
     }
-    localStorage.setItem('theme', theme);
   }, [theme]);
 
-  const ensureGuestAuth = async () => {
-    if (auth.currentUser) return auth.currentUser.uid;
-    const credential = await signInAnonymously(auth);
-    return credential.user.uid;
-  };
-
-  const setTheme = async (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-    if (auth.currentUser) {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
-      updateDocumentNonBlocking(userRef, { theme: newTheme });
-    }
-  };
-
-  const setMode = async (newMode: Mode) => {
-    setModeState(newMode);
-    localStorage.setItem('mode', newMode);
-    if (auth.currentUser) {
-      const userRef = doc(db, 'users', auth.currentUser.uid);
-      updateDocumentNonBlocking(userRef, { mode: newMode });
-    }
-  };
-
-  const setCity = async (newCity: string) => {
-    setCityState(newCity);
-    localStorage.setItem('city', newCity);
-    const uid = await ensureGuestAuth();
-    const userRef = doc(db, 'users', uid);
-    setDoc(userRef, { city: newCity, updatedAt: new Date().toISOString() }, { merge: true });
-  };
+  const setTheme = (val: Theme) => { setThemeState(val); localStorage.setItem('app_theme', val); };
+  const setMode = (val: Mode) => { setModeState(val); localStorage.setItem('app_mode', val); };
+  const setCity = (val: string) => { setCityState(val); localStorage.setItem('app_city', val); };
+  const setLanguage = (val: Language) => { setLanguageState(val); localStorage.setItem('app_lang', val); };
+  const setShowTransliteration = (val: boolean) => { setShowTransliterationState(val); localStorage.setItem('app_trans', String(val)); };
+  const setArabicFontSize = (val: ArabicFontSize) => { setArabicFontSizeState(val); localStorage.setItem('app_font_size', val); };
 
   return (
-    <AppSettingsContext.Provider value={{ theme, mode, city, setTheme, setMode, setCity, ensureGuestAuth }}>
+    <AppSettingsContext.Provider value={{ 
+      theme, mode, city, language, showTransliteration, arabicFontSize,
+      setTheme, setMode, setCity, setLanguage, setShowTransliteration, setArabicFontSize 
+    }}>
       {children}
     </AppSettingsContext.Provider>
   );
