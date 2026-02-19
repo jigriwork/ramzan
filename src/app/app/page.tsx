@@ -26,7 +26,7 @@ export default function HomeDashboard() {
     const timer = setInterval(() => {
       const now = new Date();
       if (now.getDate() !== currentTime.getDate()) {
-        // Refresh everything at midnight
+        // Refresh everything at midnight to transition Hijri date correctly
         window.location.reload();
       }
       setCurrentTime(now);
@@ -48,8 +48,8 @@ export default function HomeDashboard() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        // Method 1: University of Islamic Sciences, Karachi (Standard for Subcontinent)
-        // adjustment=-1: Explicitly adjust for Indian moon sighting to ensure correct Day 1/2 display
+        // Method 1: University of Islamic Sciences, Karachi (Standard for Indian Subcontinent)
+        // adjustment=-1: Specifically set for India Hijri sighting (Day 1 fix)
         const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1&adjustment=-1`);
         const data = await response.json();
         if (data.code === 200) {
@@ -77,7 +77,7 @@ export default function HomeDashboard() {
   const iftarTime = format12h(timings?.Maghrib);
   const displayCity = city || "Berhampur";
   
-  // Real Hijri Date Display for India with adjustment
+  // Real Hijri Date Display for India with adjustment applied via API
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
 
   const lastReadSurahId = userProfile?.lastRead?.surahId;
@@ -85,13 +85,17 @@ export default function HomeDashboard() {
   return (
     <div className="space-y-8">
       <section className="flex flex-col gap-1">
-        <h2 className="text-3xl font-black tracking-tight">
-          Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "Traveler")}
-        </h2>
+        <div className="flex justify-between items-start">
+          <h2 className="text-3xl font-black tracking-tight">
+            Salaam, {user?.displayName || (user?.isAnonymous ? "Guest" : "Traveler")}
+          </h2>
+        </div>
         <div className="flex items-center gap-2">
-          <p className="text-muted-foreground font-medium">{hijriDisplay}</p>
-          <div className="w-1 h-1 bg-muted-foreground/30 rounded-full" />
-          <p className="text-muted-foreground font-medium">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}</p>
+          <p className="text-muted-foreground font-bold text-primary">{hijriDisplay}</p>
+          <div className="w-1.5 h-1.5 bg-primary/20 rounded-full" />
+          <p className="text-muted-foreground font-medium">
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+          </p>
         </div>
       </section>
 
