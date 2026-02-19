@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { useState } from 'react';
@@ -9,18 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser, useAuth, useFirestore } from '@/firebase';
 import { signOut, linkWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { User, LogOut, Settings, Bell, Globe, ShieldCheck, MapPin, ChevronRight, Sparkles, Mail, Lock } from 'lucide-react';
+import { User, LogOut, Settings, Bell, Globe, ShieldCheck, MapPin, ChevronRight, Sparkles, Mail, Lock, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from '@/hooks/use-toast';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { useRouter } from 'next/navigation';
+import { seedDatabase } from '@/lib/data/seed-utils';
 
 export default function ProfilePage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const db = useFirestore();
   const router = useRouter();
   const { mode, setMode, theme, setTheme, city } = useAppSettings();
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -31,6 +33,22 @@ export default function ProfilePage() {
       router.push('/');
     } catch (error) {
       toast({ variant: "destructive", title: "Error", description: "Failed to sign out." });
+    }
+  };
+
+  const handleSeed = async () => {
+    setIsSeeding(true);
+    try {
+      const seeded = await seedDatabase(db);
+      if (seeded) {
+        toast({ title: "Success", description: "App data seeded successfully!" });
+      } else {
+        toast({ title: "Notice", description: "Database already has data." });
+      }
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "Error", description: e.message });
+    } finally {
+      setIsSeeding(false);
     }
   };
 
@@ -168,6 +186,18 @@ export default function ProfilePage() {
               onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
               defaultChecked 
             />
+          </div>
+          <div className="p-6 flex items-center justify-between group cursor-pointer hover:bg-secondary/20 transition-all" onClick={handleSeed}>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <Database className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <p className="font-bold text-lg">Seed Database</p>
+                <p className="text-sm text-muted-foreground font-medium">Populate initial Quran/Dua data</p>
+              </div>
+            </div>
+            {isSeeding ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> : <ChevronRight className="w-5 h-5 text-muted-foreground/30" />}
           </div>
         </Card>
       </section>
