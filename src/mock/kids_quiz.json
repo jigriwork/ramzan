@@ -1,0 +1,21 @@
+
+{
+  "quizzes": [
+    {
+      "id": "ramadan-basics",
+      "title": "Ramadan Fun Quiz",
+      "questions": [
+        {
+          "question": "What is the pre-dawn meal called?",
+          "options": ["Iftar", "Sehri", "Dinner", "Lunch"],
+          "answer": 1
+        },
+        {
+          "question": "Which holy book was revealed in Ramadan?",
+          "options": ["Torah", "Injeel", "Quran", "Zabur"],
+          "answer": 2
+        }
+      ]
+    }
+  ]
+}

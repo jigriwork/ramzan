@@ -1,26 +1,45 @@
 
 "use client"
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Target, Heart, Sparkles, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RamadanDashboard() {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 800);
+  }, []);
+
+  if (loading) return (
+    <div className="space-y-8 pb-24">
+      <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+      <div className="grid grid-cols-2 gap-4">
+        <Skeleton className="h-24 w-full rounded-[2rem]" />
+        <Skeleton className="h-24 w-full rounded-[2rem]" />
+      </div>
+      <Skeleton className="h-48 w-full rounded-[2rem]" />
+    </div>
+  );
+
   return (
-    <div className="space-y-8 pb-20">
+    <div className="space-y-8 pb-24">
       <header className="flex flex-col gap-1">
         <h2 className="text-3xl font-black text-primary">Ramadan Mubarak</h2>
         <p className="text-muted-foreground font-medium">Your spiritual journey dashboard</p>
       </header>
 
-      <Card className="bg-gradient-to-br from-indigo-600 to-primary text-white border-none shadow-xl rounded-[2.5rem] overflow-hidden">
-        <CardContent className="p-8 space-y-6">
+      <Card className="bg-gradient-to-br from-indigo-600 to-primary text-white border-none shadow-xl rounded-[2.5rem] overflow-hidden relative">
+        <div className="absolute inset-0 islamic-pattern opacity-10" />
+        <CardContent className="p-8 space-y-6 relative">
           <div className="flex justify-between items-start">
             <div className="space-y-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Today's Highlight</p>
-              <h3 className="text-2xl font-black">Day 1 of Ramadan</h3>
+              <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Ramadan 1446 AH</p>
+              <h3 className="text-2xl font-black">Day 1: Mercy</h3>
             </div>
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>
@@ -39,20 +58,20 @@ export default function RamadanDashboard() {
 
       <div className="grid grid-cols-2 gap-4">
         <Link href="/app/ramadan/calendar" className="block">
-          <Card className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] h-full">
+          <Card className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] h-full bg-blue-50">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-blue-500" />
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-blue-500 shadow-sm">
+                <Calendar className="w-6 h-6" />
               </div>
               <span className="font-bold text-sm">Calendar</span>
             </CardContent>
           </Card>
         </Link>
         <Link href="/app/ramadan/targets" className="block">
-          <Card className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] h-full">
+          <Card className="border-none shadow-sm hover:shadow-md transition-all rounded-[2rem] h-full bg-emerald-50">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-                <Target className="w-6 h-6 text-emerald-500" />
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-500 shadow-sm">
+                <Target className="w-6 h-6" />
               </div>
               <span className="font-bold text-sm">Daily Goals</span>
             </CardContent>
@@ -62,41 +81,35 @@ export default function RamadanDashboard() {
 
       <section className="space-y-4">
         <div className="flex items-center justify-between px-2">
-          <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Today's Targets</h3>
+          <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground">Today's Focus</h3>
           <Link href="/app/ramadan/targets" className="text-xs font-bold text-primary flex items-center">
-            View All <ChevronRight className="w-3 h-3" />
+            View Targets <ChevronRight className="w-3 h-3" />
           </Link>
         </div>
-        <Card className="border-none shadow-sm rounded-[2rem] divide-y">
-          <TargetItem label="Pray 5 Times" completed={true} />
-          <TargetItem label="Read 10 Pages of Quran" completed={false} />
-          <TargetItem label="Give Sadaqah" completed={false} />
+        <Card className="border-none shadow-sm rounded-[2rem] divide-y overflow-hidden bg-white">
+          <div className="p-6 flex items-center justify-between">
+            <span className="font-bold text-lg">Pray 5 Times</span>
+            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+          </div>
+          <div className="p-6 flex items-center justify-between">
+            <span className="font-bold text-lg">Read Quran (10p)</span>
+            <CheckCircle2 className="w-6 h-6 text-slate-200" />
+          </div>
         </Card>
       </section>
 
-      <Card className="bg-amber-50 border-none rounded-[2rem] p-8 space-y-4">
+      <Card className="bg-amber-50 border-none rounded-[2.5rem] p-8 space-y-4">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center">
             <Heart className="w-6 h-6 text-amber-600" />
           </div>
           <div>
-            <h4 className="font-bold text-amber-900">Charity Reminder</h4>
-            <p className="text-sm text-amber-800/70 font-medium">Small deeds lead to big rewards.</p>
+            <h4 className="font-bold text-amber-900 text-lg">Charity Reminder</h4>
+            <p className="text-sm text-amber-800/70 font-medium">Prophet (SAW) was most generous in Ramadan.</p>
           </div>
         </div>
-        <Button className="w-full rounded-2xl bg-amber-600 hover:bg-amber-700 font-bold">Donate Now</Button>
+        <Button className="w-full rounded-2xl h-14 bg-amber-600 hover:bg-amber-700 font-black shadow-lg shadow-amber-200">Give Sadaqah</Button>
       </Card>
     </div>
   );
 }
-
-function TargetItem({ label, completed }: { label: string, completed: boolean }) {
-  return (
-    <div className="p-6 flex items-center justify-between">
-      <span className={cn("font-medium", completed && "line-through text-muted-foreground")}>{label}</span>
-      <CheckCircle2 className={cn("w-6 h-6 transition-colors", completed ? "text-emerald-500" : "text-muted-foreground/20")} />
-    </div>
-  );
-}
-
-import { cn } from '@/lib/utils';

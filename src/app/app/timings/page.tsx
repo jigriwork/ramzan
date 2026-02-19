@@ -5,9 +5,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, MapPin, CalendarDays, Clock, Loader2 } from 'lucide-react';
+import { Search, MapPin, CalendarDays, Clock, Loader2, Settings2 } from 'lucide-react';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { toast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function TimingsPage() {
   const { city, setCity } = useAppSettings();
@@ -19,8 +20,6 @@ export default function TimingsPage() {
     if (!cityName) return;
     setLoading(true);
     try {
-      // Method 1: University of Islamic Sciences, Karachi (Subcontinent)
-      // adjustment=-1: Explicitly adjust for Indian moon sighting
       const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1&adjustment=-1`);
       const data = await response.json();
       if (data.code === 200) {
@@ -36,18 +35,13 @@ export default function TimingsPage() {
   };
 
   useEffect(() => {
-    if (city) {
-      fetchTimings(city);
-    } else {
-      fetchTimings('Berhampur');
-    }
+    fetchTimings(city || 'Berhampur');
   }, [city]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchInput.trim()) {
       setCity(searchInput.trim());
-      fetchTimings(searchInput.trim());
     }
   };
 
@@ -69,11 +63,28 @@ export default function TimingsPage() {
   ] : [];
 
   return (
-    <div className="space-y-6 pb-10">
-      <section className="flex flex-col gap-2">
+    <div className="space-y-6 pb-24">
+      <header className="flex flex-col gap-2">
         <h2 className="text-3xl font-headline font-bold text-primary">Prayer Timings</h2>
         <p className="text-muted-foreground">Accurate timings for {city || 'Berhampur'}, India</p>
-      </section>
+      </header>
+
+      <div className="grid grid-cols-1 gap-4">
+        <Link href="/app/timings/method">
+          <Card className="bg-secondary/30 border-none rounded-[2rem] p-6 hover:bg-secondary/50 transition-all flex items-center justify-between group">
+             <div className="flex items-center gap-4">
+               <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-primary">
+                 <Settings2 className="w-5 h-5" />
+               </div>
+               <div>
+                 <p className="font-bold">Calculation Method</p>
+                 <p className="text-xs text-muted-foreground font-medium">Adjust settings for your region</p>
+               </div>
+             </div>
+             <Settings2 className="w-5 h-5 opacity-20 group-hover:opacity-100 transition-opacity" />
+          </Card>
+        </Link>
+      </div>
 
       <form onSubmit={handleSearch} className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
@@ -95,7 +106,7 @@ export default function TimingsPage() {
         </div>
       ) : (
         <>
-          <Card className="border-none shadow-md overflow-hidden rounded-[2rem]">
+          <Card className="border-none shadow-md overflow-hidden rounded-[2.5rem]">
             <CardHeader className="flex flex-row items-center justify-between bg-primary/5 px-8">
               <CardTitle className="text-lg flex items-center gap-2">
                 <CalendarDays className="w-5 h-5 text-primary" /> Today's Schedule
@@ -105,27 +116,15 @@ export default function TimingsPage() {
             <CardContent className="p-0">
               <div className="divide-y">
                 {formattedTimings.map((prayer) => (
-                  <div 
-                    key={prayer.name} 
-                    className={`flex items-center justify-between p-6 transition-colors`}
-                  >
-                    <div>
-                      <p className={`font-bold`}>{prayer.name}</p>
-                    </div>
+                  <div key={prayer.name} className="flex items-center justify-between p-6 hover:bg-secondary/10 transition-colors">
+                    <p className="font-bold">{prayer.name}</p>
                     <div className="flex items-center gap-2">
-                      <Clock className={`w-4 h-4 text-muted-foreground`} />
-                      <span className={`text-xl font-headline font-black`}>{prayer.time}</span>
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span className="text-xl font-headline font-black">{prayer.time}</span>
                     </div>
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-secondary/20 border-none rounded-[2rem]">
-            <CardContent className="p-8 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">Current Selection</p>
-              <p className="text-xl font-headline font-bold">{city || 'Berhampur'}, India</p>
             </CardContent>
           </Card>
         </>
