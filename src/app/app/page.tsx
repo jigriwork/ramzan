@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useEffect, useState } from 'react';
@@ -33,7 +34,8 @@ export default function HomeDashboard() {
       const targetCity = city || 'Berhampur';
       setLoadingTimings(true);
       try {
-        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=2`);
+        // Changed method to 1 (University of Islamic Sciences, Karachi) which is standard for India
+        const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${targetCity}&country=India&method=1`);
         const data = await response.json();
         if (data.code === 200) {
           setTimings(data.data.timings);
@@ -52,6 +54,7 @@ export default function HomeDashboard() {
   const displayCity = city || "Berhampur";
   
   const isRamadan = hijri?.month?.en === "Ramaḍān" || hijri?.month?.en === "Ramadan";
+  // The API day might still be off by 1 depending on moon sighting; for India Method 1 is generally correct.
   const hijriDisplay = hijri ? `${hijri.day} ${hijri.month.en} ${hijri.year} AH` : "Loading date...";
   const ramadanDayDisplay = isRamadan ? `Ramadan Day ${hijri.day}` : hijriDisplay;
 

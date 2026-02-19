@@ -19,7 +19,8 @@ export default function TimingsPage() {
     if (!cityName) return;
     setLoading(true);
     try {
-      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=2`);
+      // Changed method to 1 (University of Islamic Sciences, Karachi) which is standard for India
+      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1`);
       const data = await response.json();
       if (data.code === 200) {
         setTimings(data.data.timings);

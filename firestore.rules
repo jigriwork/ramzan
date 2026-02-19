@@ -9,18 +9,18 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Public Read-Only
-    match /quran_surahs/{surahId} {
+    // Public Collections with Recursive Wildcard for robust querying
+    match /quran_surahs/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isSignedIn(); // Allow seeding by authenticated users
     }
-    match /quran_ayahs/{docId} {
+    match /quran_ayahs/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isSignedIn(); // Allow seeding by authenticated users
     }
-    match /duas/{duaId} {
+    match /duas/{document=**} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isSignedIn(); // Allow seeding by authenticated users
     }
 
     // User Private
