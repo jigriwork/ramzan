@@ -10,7 +10,7 @@ service cloud.firestore {
     }
 
     // Public Collections: Allow anyone to read (get and list)
-    // Using recursive wildcards to ensure all sub-paths are readable for public data
+    // Using recursive wildcards and explicit collection-level read access
     match /quran_surahs/{document=**} {
       allow read: if true;
       allow write: if isSignedIn();
