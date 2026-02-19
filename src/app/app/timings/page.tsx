@@ -50,13 +50,21 @@ export default function TimingsPage() {
     }
   };
 
+  const format12h = (time24: string) => {
+    const [hoursStr, minutesStr] = time24.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const h12 = hours % 12 || 12;
+    return `${h12}:${minutesStr} ${period}`;
+  };
+
   const formattedTimings = timings ? [
-    { name: 'Fajr', time: timings.Fajr },
-    { name: 'Sunrise', time: timings.Sunrise },
-    { name: 'Dhuhr', time: timings.Dhuhr },
-    { name: 'Asr', time: timings.Asr },
-    { name: 'Maghrib (Iftar)', time: timings.Maghrib },
-    { name: 'Isha', time: timings.Isha },
+    { name: 'Fajr', time: format12h(timings.Fajr) },
+    { name: 'Sunrise', time: format12h(timings.Sunrise) },
+    { name: 'Dhuhr', time: format12h(timings.Dhuhr) },
+    { name: 'Asr', time: format12h(timings.Asr) },
+    { name: 'Maghrib (Iftar)', time: format12h(timings.Maghrib) },
+    { name: 'Isha', time: format12h(timings.Isha) },
   ] : [];
 
   return (

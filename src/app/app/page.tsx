@@ -51,7 +51,16 @@ export default function HomeDashboard() {
     fetchTimings();
   }, [city]);
 
-  const iftarTime = timings?.Maghrib || "--:--";
+  const format12h = (time24: string | undefined) => {
+    if (!time24) return "--:--";
+    const [hoursStr, minutesStr] = time24.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const h12 = hours % 12 || 12;
+    return `${h12}:${minutesStr} ${period}`;
+  };
+
+  const iftarTime = format12h(timings?.Maghrib);
   const displayCity = city || "Berhampur";
   
   // Real Hijri Date Display for India
@@ -96,11 +105,11 @@ export default function HomeDashboard() {
             <div className="flex justify-between w-full">
               <div className="text-left">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Fajr (Sehri Ends)</p>
-                <p className="font-bold text-xl">{timings?.Fajr || "--:--"}</p>
+                <p className="font-bold text-xl">{format12h(timings?.Fajr)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-50 mb-1">Sunrise</p>
-                <p className="font-bold text-xl">{timings?.Sunrise || "--:--"}</p>
+                <p className="font-bold text-xl">{format12h(timings?.Sunrise)}</p>
               </div>
             </div>
           </div>
