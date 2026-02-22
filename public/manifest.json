@@ -1,0 +1,9 @@
+{
+  "name": "Deen App",
+  "short_name": "Deen",
+  "description": "Quran, Duas, Ramadan, Kids",
+  "icons": [{ "src": "/icon.svg", "sizes": "64x64", "type": "image/svg+xml" }],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

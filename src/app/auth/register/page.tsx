@@ -2,14 +2,52 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Moon, Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { useFirestore, registerEmail } from '@/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorText, setErrorText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const db = useFirestore();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorText('');
+    setIsSubmitting(true);
+    try {
+      const credential = await registerEmail(email, password);
+      await setDoc(
+        doc(db, 'users', credential.user.uid),
+        {
+          name: name || '',
+          city: '',
+          mode: 'adult',
+          theme: 'system',
+          language: 'en',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          email: credential.user.email || email,
+        },
+        { merge: true }
+      );
+      router.push('/app');
+    } catch (error: any) {
+      setErrorText(error?.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background islamic-pattern relative">
@@ -35,14 +73,15 @@ export default function RegisterPage() {
             <CardTitle>Sign Up</CardTitle>
             <CardDescription>Join the NoorRamadan community</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
              <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" type="text" placeholder="Enter your name" />
+              <Input id="name" type="text" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" />
+              <Input id="email" type="email" placeholder="name@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
@@ -51,6 +90,9 @@ export default function RegisterPage() {
                   id="password" 
                   type={showPassword ? "text" : "password"} 
                   className="pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <Button
                   type="button"
@@ -63,9 +105,11 @@ export default function RegisterPage() {
                 </Button>
               </div>
             </div>
-            <Button className="w-full h-12 text-lg rounded-xl" asChild>
-              <Link href="/app">Register Now</Link>
+            {errorText ? <p className="text-sm text-destructive">{errorText}</p> : null}
+            <Button className="w-full h-12 text-lg rounded-xl" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Registering...' : 'Register Now'}
             </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex justify-center border-t py-4">
             <p className="text-sm text-muted-foreground">

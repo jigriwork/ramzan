@@ -5,42 +5,79 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null;
     }
+
     function isOwner(uid) {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Public Collections: Allow anyone to read (get and list)
-    // Using recursive wildcards and explicit collection-level read access
-    match /quran_surahs/{document=**} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-    
-    match /quran_ayahs/{document=**} {
-      allow read: if true;
-      allow write: if isSignedIn();
-    }
-    
-    match /duas/{document=**} {
-      allow read: if true;
-      allow write: if isSignedIn();
+    // Development-safe admin gate.
+    // TODO: Replace with custom claims role check (e.g. request.auth.token.admin == true)
+    // once production admin management is finalized.
+    function isAdmin() {
+      return request.auth != null &&
+        request.auth.token.email_verified == true;
     }
 
-    // User Private Data
+    // Public content: readable by all, writable by admin only.
+    match /quran_surahs/{surahId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /quran_ayahs/{ayahId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /duas/{duaId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /dua_collections/{collectionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Private user profile document.
     match /users/{uid} {
       allow read, write: if isOwner(uid);
-      
-      match /bookmarks/{document=**} {
+    }
+
+    // Private bookmarks per user.
+    match /bookmarks/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /items/{itemId} {
         allow read, write: if isOwner(uid);
       }
-      
-      match /favorite_duas/{document=**} {
+    }
+
+    // Private favorite duas per user.
+    match /favorites/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /duas/{duaId} {
         allow read, write: if isOwner(uid);
       }
-      
-      match /learn_progress/{document=**} {
-        allow read, write: if isOwner(uid);
-      }
+    }
+
+    // Private per-user progress documents.
+    match /learn_progress/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /khatam_progress/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /kids_progress/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Deny all other document paths.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

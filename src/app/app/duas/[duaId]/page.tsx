@@ -10,23 +10,60 @@ import { duaService, Dua } from '@/services/duaService';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { ensureAuthForSaving, useUser } from '@/firebase';
+import { deleteDoc, doc, getDoc, setDoc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
 
 export default function DuaDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { language } = useAppSettings();
+  const { user } = useUser();
+  const db = useFirestore();
   const [dua, setDua] = useState<Dua | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+  const favId = params.duaId as string;
+  const favCacheKey = `fav_dua_${favId}`;
+
+  const setFavoriteCache = (favorite: boolean) => {
+    if (typeof window === 'undefined') return;
+    if (favorite) {
+      localStorage.setItem(favCacheKey, '1');
+    } else {
+      localStorage.removeItem(favCacheKey);
+    }
+  };
 
   useEffect(() => {
     duaService.getDuaById(params.duaId as string).then(data => {
       setDua(data || null);
       setLoading(false);
-      const favs = duaService.getFavoriteDuas();
-      setIsFavorite(favs.includes(params.duaId as string));
     });
   }, [params.duaId]);
+
+  useEffect(() => {
+    if (!user || !favId) {
+      setIsFavorite(typeof window !== 'undefined' && localStorage.getItem(favCacheKey) === '1');
+      return;
+    }
+
+    const favRef = doc(db, 'favorites', user.uid, 'duas', favId);
+    getDoc(favRef)
+      .then((snap) => {
+        const exists = snap.exists();
+        setIsFavorite(exists);
+        setFavoriteCache(exists);
+      })
+      .catch(() => {
+        setIsFavorite(typeof window !== 'undefined' && localStorage.getItem(favCacheKey) === '1');
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load favorite state from cloud. Using cached state.',
+        });
+      });
+  }, [db, favCacheKey, favId, user]);
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -52,10 +89,35 @@ export default function DuaDetailPage() {
     }
   };
 
-  const toggleFav = () => {
-    const newFavs = duaService.toggleFavorite(dua!.id);
-    setIsFavorite(newFavs.includes(dua!.id));
-    toast({ title: isFavorite ? "Removed" : "Saved", description: "Updated your favorites." });
+  const toggleFav = async () => {
+    if (!dua) return;
+
+    try {
+      const activeUser = await ensureAuthForSaving();
+      const favRef = doc(db, 'favorites', activeUser.uid, 'duas', dua.id);
+
+      if (isFavorite) {
+        await deleteDoc(favRef);
+        setIsFavorite(false);
+        setFavoriteCache(false);
+        toast({ title: "Removed", description: "Updated your favorites." });
+        return;
+      }
+
+      await setDoc(favRef, {
+        duaId: dua.id,
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+      setIsFavorite(true);
+      setFavoriteCache(true);
+      toast({ title: "Saved", description: "Updated your favorites." });
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Could not update favorite in cloud right now.',
+      });
+    }
   };
 
   if (loading) return <div className="p-8 space-y-6"><Skeleton className="h-64 w-full rounded-[2.5rem]" /><Skeleton className="h-40 w-full" /></div>;

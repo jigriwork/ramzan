@@ -8,21 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Moon, ChevronLeft, Mail, CheckCircle2 } from 'lucide-react';
-import { useAuth } from '@/firebase';
-import { sendPasswordResetEmail } from 'firebase/auth';
+import { sendReset } from '@/firebase';
 import { toast } from '@/hooks/use-toast';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSent, setIsSent] = useState(false);
-  const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await sendPasswordResetEmail(auth, email);
+      await sendReset(email);
       setIsSent(true);
       toast({ title: "Reset Link Sent", description: "Please check your email inbox." });
     } catch (error: any) {

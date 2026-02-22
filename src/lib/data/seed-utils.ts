@@ -1,5 +1,6 @@
 import { Firestore, collection, doc, writeBatch, getDocs, query, limit } from 'firebase/firestore';
 import { QURAN_SURAHS, QURAN_AYAH_MOCK, DUAS } from './seed';
+import duaMock from '@/mock/duas.json';
 
 export async function seedDatabase(db: Firestore) {
   // Only seed if empty to prevent duplicates/costs
@@ -28,6 +29,12 @@ export async function seedDatabase(db: Firestore) {
   DUAS.forEach(dua => {
     const ref = doc(db, 'duas', dua.id);
     batch.set(ref, dua);
+  });
+
+  // Seed Dua Collections
+  (duaMock.collections || []).forEach((collectionItem) => {
+    const ref = doc(db, 'dua_collections', collectionItem.id);
+    batch.set(ref, collectionItem);
   });
 
   await batch.commit();

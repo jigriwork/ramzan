@@ -2,7 +2,7 @@
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Firestore } from 'firebase/firestore';
+import { Firestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
@@ -78,7 +78,45 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      async (firebaseUser) => { // Auth state determined
+        if (firebaseUser) {
+          try {
+            const userRef = doc(firestore, 'users', firebaseUser.uid);
+            const existingSnap = await getDoc(userRef);
+
+            const defaults = {
+              city: '',
+              mode: 'adult',
+              theme: 'system',
+              language: 'en',
+              createdAt: new Date().toISOString(),
+            };
+
+            const payload: Record<string, unknown> = {
+              updatedAt: new Date().toISOString(),
+            };
+
+            if (firebaseUser.email) {
+              payload.email = firebaseUser.email;
+            }
+
+            if (!existingSnap.exists()) {
+              Object.assign(payload, defaults);
+            } else {
+              const existingData = existingSnap.data() ?? {};
+              (Object.keys(defaults) as Array<keyof typeof defaults>).forEach((key) => {
+                if (existingData[key] === undefined || existingData[key] === null) {
+                  payload[key] = defaults[key];
+                }
+              });
+            }
+
+            await setDoc(userRef, payload, { merge: true });
+          } catch (error) {
+            console.error('FirebaseProvider: failed to upsert users/{uid} profile:', error);
+          }
+        }
+
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { // Auth listener error
@@ -87,7 +125,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); // Cleanup
-  }, [auth]); // Depends on the auth instance
+  }, [auth, firestore]); // Depends on the auth instance
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

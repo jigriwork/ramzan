@@ -7,8 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Sparkles, Trophy, CheckCircle2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function KhatamPlanPage() {
+  const db = useFirestore();
+  const { user } = useUser();
   const [completedDays, setCompletedDays] = useState(0);
   const totalDays = 30;
 
@@ -17,15 +21,59 @@ export default function KhatamPlanPage() {
     if (saved) setCompletedDays(parseInt(saved, 10));
   }, []);
 
-  const markToday = () => {
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'khatam_progress', user.uid));
+        if (cancelled || !snap.exists()) return;
+        const data = snap.data() as { completedDays?: number };
+        if (typeof data.completedDays === 'number') {
+          setCompletedDays(data.completedDays);
+          localStorage.setItem('khatam_completed_days', String(data.completedDays));
+        }
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load Khatam progress from cloud. Using cached state.',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, user]);
+
+  const markToday = async () => {
     if (completedDays >= totalDays) return;
     const newVal = completedDays + 1;
-    setCompletedDays(newVal);
-    localStorage.setItem('khatam_completed_days', newVal.toString());
-    toast({
-      title: "Target Achieved!",
-      description: `Day ${newVal} of your Khatam plan marked as completed.`,
-    });
+
+    try {
+      const activeUser = await ensureAuthForSaving();
+      await setDoc(doc(db, 'khatam_progress', activeUser.uid), {
+        completedDays: newVal,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+
+      setCompletedDays(newVal);
+      localStorage.setItem('khatam_completed_days', newVal.toString());
+      toast({
+        title: "Target Achieved!",
+        description: `Day ${newVal} of your Khatam plan marked as completed.`,
+      });
+    } catch {
+      setCompletedDays(newVal);
+      localStorage.setItem('khatam_completed_days', newVal.toString());
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Could not sync Khatam progress to cloud. Saved locally.',
+      });
+    }
   };
 
   const progress = (completedDays / totalDays) * 100;

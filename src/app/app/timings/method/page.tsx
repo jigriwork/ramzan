@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, Info } from 'lucide-react';
@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { settingsService } from '@/services/settingsService';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 const methods = [
   { id: 1, name: "Standard India Method", desc: "Most accurate and widely used method for all cities in India." },
@@ -20,12 +22,55 @@ const methods = [
 
 export default function TimingsMethodPage() {
   const router = useRouter();
+  const db = useFirestore();
+  const { user } = useUser();
   const [current, setCurrent] = useState(settingsService.getSettings().calculationMethod);
 
-  const handleSave = () => {
-    settingsService.saveSettings({ calculationMethod: current });
-    toast({ title: "Settings Saved", description: "Your timings will update shortly." });
-    router.back();
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        if (cancelled || !snap.exists()) return;
+        const data = snap.data() as { calculationMethod?: number };
+        if (typeof data.calculationMethod === 'number') {
+          setCurrent(data.calculationMethod);
+          settingsService.saveSettings({ calculationMethod: data.calculationMethod });
+        }
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load timing method from cloud. Using cached settings.',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, user]);
+
+  const handleSave = async () => {
+    try {
+      const activeUser = await ensureAuthForSaving();
+      await setDoc(doc(db, 'users', activeUser.uid), {
+        calculationMethod: current,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true });
+      settingsService.saveSettings({ calculationMethod: current });
+      toast({ title: "Settings Saved", description: "Your timings will update shortly." });
+      router.back();
+    } catch {
+      settingsService.saveSettings({ calculationMethod: current });
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Could not sync timing method to cloud. Saved locally.',
+      });
+    }
   };
 
   return (

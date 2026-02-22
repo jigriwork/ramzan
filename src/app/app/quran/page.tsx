@@ -19,7 +19,7 @@ export default function QuranPage() {
 
   const bookmarksQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(db, 'users', user.uid, 'bookmarks'), orderBy('createdAt', 'desc'), limit(3));
+    return query(collection(db, 'bookmarks', user.uid, 'items'), orderBy('createdAt', 'desc'), limit(3));
   }, [db, user]);
   const { data: recentBookmarks } = useCollection(bookmarksQuery);
 

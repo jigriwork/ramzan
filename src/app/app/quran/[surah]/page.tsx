@@ -5,13 +5,12 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useUser, useCollection, useMemoFirebase, ensureAuthForSaving } from '@/firebase';
 import { collection, query, where, orderBy, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { ChevronLeft, Share2, Bookmark, Heart, Play, Sparkles, Volume2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { toast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 
@@ -20,7 +19,6 @@ export default function SurahDetailsPage() {
   const surahIndex = Number(params.surah);
   const { user } = useUser();
   const db = useFirestore();
-  const { ensureGuestAuth } = useAppSettings();
   const [activeTranslation, setActiveTranslation] = useState('en');
   const [isAudioSheetOpen, setIsAudioSheetOpen] = useState(false);
 
@@ -35,11 +33,22 @@ export default function SurahDetailsPage() {
   const { data: ayahs, isLoading } = useCollection(ayahsQuery);
 
   useEffect(() => {
-    if (user) {
-      setDoc(doc(db, 'users', user.uid), {
-        lastRead: { surahId: String(surahIndex), updatedAt: new Date().toISOString() }
-      }, { merge: true });
-    }
+    if (!user) return;
+
+    void (async () => {
+      try {
+        const activeUser = await ensureAuthForSaving();
+        await setDoc(doc(db, 'users', activeUser.uid), {
+          lastRead: { surahId: String(surahIndex), updatedAt: new Date().toISOString() }
+        }, { merge: true });
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not sync last-read progress to cloud.',
+        });
+      }
+    })();
   }, [user, surahIndex, db]);
 
   const handleShareSurah = () => {
@@ -108,7 +117,7 @@ export default function SurahDetailsPage() {
             </div>
           ))
         ) : ayahs?.map((ayah) => (
-          <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} ensureGuestAuth={() => {}} onAudioClick={() => setIsAudioSheetOpen(true)} />
+          <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} onAudioClick={() => setIsAudioSheetOpen(true)} />
         ))}
       </div>
 
@@ -134,35 +143,68 @@ export default function SurahDetailsPage() {
   );
 }
 
-function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeTranslation: string, ensureGuestAuth: any, onAudioClick: () => void }) {
+function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeTranslation: string, onAudioClick: () => void }) {
   const db = useFirestore();
   const { user } = useUser();
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const cacheKey = `bookmark_${ayah.surahId}_${ayah.ayahNo}`;
+
+  const setBookmarkCache = (bookmarked: boolean) => {
+    if (typeof window === 'undefined') return;
+    if (bookmarked) {
+      localStorage.setItem(cacheKey, '1');
+    } else {
+      localStorage.removeItem(cacheKey);
+    }
+  };
 
   useEffect(() => {
-    if (user) {
-      const bookmarkRef = doc(db, 'users', user.uid, 'bookmarks', `${ayah.surahId}_${ayah.ayahNo}`);
-      getDoc(bookmarkRef).then(snap => setIsBookmarked(snap.exists()));
+    if (!user) {
+      setIsBookmarked(typeof window !== 'undefined' && localStorage.getItem(cacheKey) === '1');
+      return;
     }
+
+    const bookmarkRef = doc(db, 'bookmarks', user.uid, 'items', `${ayah.surahId}_${ayah.ayahNo}`);
+    getDoc(bookmarkRef)
+      .then((snap) => {
+        const exists = snap.exists();
+        setIsBookmarked(exists);
+        setBookmarkCache(exists);
+      })
+      .catch(() => {
+        setIsBookmarked(typeof window !== 'undefined' && localStorage.getItem(cacheKey) === '1');
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load bookmark state from cloud. Using cached state.',
+        });
+      });
   }, [user, ayah, db]);
 
   const handleBookmark = async () => {
-    if (!user) {
-      toast({ title: "Please Login", description: "Sign in to save bookmarks." });
-      return;
-    }
-    const ref = doc(db, 'users', user.uid, 'bookmarks', `${ayah.surahId}_${ayah.ayahNo}`);
-    if (isBookmarked) {
-      await deleteDoc(ref);
-      setIsBookmarked(false);
-    } else {
-      await setDoc(ref, { 
-        surahId: ayah.surahId, 
-        ayahNo: ayah.ayahNo, 
-        createdAt: new Date().toISOString() 
+    try {
+      const activeUser = await ensureAuthForSaving();
+      const ref = doc(db, 'bookmarks', activeUser.uid, 'items', `${ayah.surahId}_${ayah.ayahNo}`);
+      if (isBookmarked) {
+        await deleteDoc(ref);
+        setIsBookmarked(false);
+        setBookmarkCache(false);
+      } else {
+        await setDoc(ref, {
+          surahId: ayah.surahId,
+          ayahNo: ayah.ayahNo,
+          createdAt: new Date().toISOString()
+        });
+        setIsBookmarked(true);
+        setBookmarkCache(true);
+        toast({ title: "Ayah Saved", description: "Bookmark added successfully." });
+      }
+    } catch {
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Could not update bookmark in cloud right now.',
       });
-      setIsBookmarked(true);
-      toast({ title: "Ayah Saved", description: "Bookmark added successfully." });
     }
   };
 

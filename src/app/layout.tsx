@@ -6,8 +6,13 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'NoorRamadan',
-  description: 'A premium Ramadan + Deen companion app',
+  title: 'Deen App',
+  description: 'Quran, Duas, Ramadan, Kids',
+  applicationName: 'Deen App',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon.svg',
+  },
 };
 
 export default function RootLayout({

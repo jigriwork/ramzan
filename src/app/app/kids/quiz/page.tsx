@@ -9,9 +9,14 @@ import { useRouter } from 'next/navigation';
 import { kidsService } from '@/services/kidsService';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
 
 export default function KidsQuizPage() {
   const router = useRouter();
+  const db = useFirestore();
+  const { user } = useUser();
   const [quiz, setQuiz] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -21,6 +26,46 @@ export default function KidsQuizPage() {
   useEffect(() => {
     kidsService.getQuizzes().then(all => setQuiz(all[0]));
   }, []);
+
+  useEffect(() => {
+    if (!quiz) return;
+
+    const cached = localStorage.getItem(`quiz_score_${quiz.id}`);
+    if (cached) {
+      const parsed = Number(cached);
+      if (!Number.isNaN(parsed)) {
+        setScore(parsed);
+      }
+    }
+  }, [quiz]);
+
+  useEffect(() => {
+    if (!user || !quiz) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'kids_progress', user.uid));
+        if (cancelled || !snap.exists()) return;
+        const data = snap.data() as { quizScores?: Record<string, number> };
+        const remoteScore = data.quizScores?.[quiz.id];
+        if (typeof remoteScore === 'number') {
+          setScore(remoteScore);
+          localStorage.setItem(`quiz_score_${quiz.id}`, String(remoteScore));
+        }
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load kids progress from cloud. Using cached state.',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, quiz, user]);
 
   if (!quiz) return null;
 
@@ -37,8 +82,26 @@ export default function KidsQuizPage() {
         setCurrentIndex(i => i + 1);
         setSelected(null);
       } else {
+        const finalScore = score + (idx === currentQuestion.answer ? 1 : 0);
         setFinished(true);
-        kidsService.saveScore(quiz.id, score + (idx === currentQuestion.answer ? 1 : 0));
+        kidsService.saveScore(quiz.id, finalScore);
+        (async () => {
+          try {
+            const activeUser = await ensureAuthForSaving();
+            await setDoc(doc(db, 'kids_progress', activeUser.uid), {
+              quizScores: {
+                [quiz.id]: finalScore,
+              },
+              updatedAt: new Date().toISOString(),
+            }, { merge: true });
+          } catch {
+            toast({
+              variant: 'destructive',
+              title: 'Save Failed',
+              description: 'Could not sync kids progress to cloud. Saved locally.',
+            });
+          }
+        })();
       }
     }, 1000);
   };

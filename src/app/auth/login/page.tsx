@@ -2,14 +2,35 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Moon, Eye, EyeOff, ChevronLeft } from 'lucide-react';
+import { signInEmail } from '@/firebase';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorText, setErrorText] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorText('');
+    setIsSubmitting(true);
+    try {
+      await signInEmail(email, password);
+      router.push('/app');
+    } catch (error: any) {
+      setErrorText(error?.message || 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background islamic-pattern relative">
@@ -35,10 +56,18 @@ export default function LoginPage() {
             <CardTitle>Login</CardTitle>
             <CardDescription>Enter your email and password</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="name@example.com" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -50,6 +79,9 @@ export default function LoginPage() {
                   id="password" 
                   type={showPassword ? "text" : "password"} 
                   className="pr-10"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
                 <Button
                   type="button"
@@ -62,9 +94,11 @@ export default function LoginPage() {
                 </Button>
               </div>
             </div>
-            <Button className="w-full h-12 text-lg rounded-xl" asChild>
-              <Link href="/app">Log In</Link>
+            {errorText ? <p className="text-sm text-destructive">{errorText}</p> : null}
+            <Button className="w-full h-12 text-lg rounded-xl" type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Logging in...' : 'Log In'}
             </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex justify-center border-t py-4">
             <p className="text-sm text-muted-foreground">

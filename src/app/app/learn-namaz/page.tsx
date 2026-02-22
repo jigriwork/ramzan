@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -9,12 +9,62 @@ import { Label } from '@/components/ui/label';
 import { NAMAZ_STEPS } from '@/lib/data/seed';
 import { ChevronRight, ChevronLeft, CheckCircle2, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { toast } from '@/hooks/use-toast';
 
 export default function LearnNamazPage() {
+  const db = useFirestore();
+  const { user } = useUser();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isKidsMode, setIsKidsMode] = useState(false);
   const currentStep = NAMAZ_STEPS[currentStepIndex];
   const progress = ((currentStepIndex + 1) / NAMAZ_STEPS.length) * 100;
+
+  useEffect(() => {
+    const cached = localStorage.getItem('learn_namaz_progress');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as { stepIndex?: number };
+        if (typeof parsed.stepIndex === 'number') {
+          setCurrentStepIndex(Math.max(0, Math.min(parsed.stepIndex, NAMAZ_STEPS.length - 1)));
+        }
+      } catch {
+        // ignore corrupt cache
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'learn_progress', user.uid));
+        if (cancelled || !snap.exists()) return;
+        const data = snap.data() as { stepIndex?: number; completed?: boolean; completedAt?: string };
+        if (typeof data.stepIndex === 'number') {
+          setCurrentStepIndex(Math.max(0, Math.min(data.stepIndex, NAMAZ_STEPS.length - 1)));
+        }
+        localStorage.setItem('learn_namaz_progress', JSON.stringify({
+          completed: Boolean(data.completed),
+          completedAt: data.completedAt ?? null,
+          stepIndex: typeof data.stepIndex === 'number' ? data.stepIndex : currentStepIndex,
+        }));
+      } catch {
+        toast({
+          variant: 'destructive',
+          title: 'Sync Warning',
+          description: 'Could not load learn progress from cloud. Using cached state.',
+        });
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [db, user]);
 
   const nextStep = () => {
     if (currentStepIndex < NAMAZ_STEPS.length - 1) {
@@ -25,6 +75,31 @@ export default function LearnNamazPage() {
   const prevStep = () => {
     if (currentStepIndex > 0) {
       setCurrentStepIndex(currentStepIndex - 1);
+    }
+  };
+
+  const handleFinishGuide = async () => {
+    try {
+      const activeUser = await ensureAuthForSaving();
+      const payload = {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        stepIndex: currentStepIndex,
+      };
+      await setDoc(doc(db, 'learn_progress', activeUser.uid), payload, { merge: true });
+      localStorage.setItem('learn_namaz_progress', JSON.stringify(payload));
+      toast({ title: 'Progress Saved', description: 'Learn Namaz progress synced.' });
+    } catch {
+      localStorage.setItem('learn_namaz_progress', JSON.stringify({
+        completed: true,
+        completedAt: new Date().toISOString(),
+        stepIndex: currentStepIndex,
+      }));
+      toast({
+        variant: 'destructive',
+        title: 'Save Failed',
+        description: 'Could not sync learn progress to cloud. Saved locally.',
+      });
     }
   };
 
@@ -121,7 +196,7 @@ export default function LearnNamazPage() {
           <ChevronLeft className="w-5 h-5 mr-2" /> Previous
         </Button>
         {currentStepIndex === NAMAZ_STEPS.length - 1 ? (
-          <Button size="lg" className="flex-1 h-14 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200">
+          <Button size="lg" className="flex-1 h-14 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200" onClick={handleFinishGuide}>
             <CheckCircle2 className="w-5 h-5 mr-2" /> Finish Guide
           </Button>
         ) : (
