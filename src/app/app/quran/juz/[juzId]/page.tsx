@@ -12,7 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function JuzDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const juzId = params.juzId as string;
+  const juzId = Array.isArray(params.juzId) ? params.juzId[0] : params.juzId as string;
   const [juz, setJuz] = useState<Juz | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -41,28 +41,40 @@ export default function JuzDetailPage() {
         <ChevronLeft className="w-4 h-4 mr-2" /> Back
       </Button>
 
-      <Card className="bg-primary text-white border-none rounded-[2.5rem] p-10 text-center relative overflow-hidden">
+      <Card className="bg-primary text-white border-none rounded-[2.5rem] p-10 text-center relative overflow-hidden shadow-xl">
         <div className="absolute inset-0 opacity-10 islamic-pattern" />
         <CardContent className="space-y-4 relative">
           <h2 className="text-4xl font-black">Juz {juz.index}</h2>
           <p className="opacity-80 font-medium">{juz.description}</p>
           <div className="flex justify-center gap-2 pt-4">
-             <Button className="bg-white text-primary font-bold rounded-full px-8">Continue Reading</Button>
+            <Button className="bg-white text-primary font-bold rounded-full px-8" onClick={() => router.push(`/app/quran/juz/${juzId}/read`)}>Continue Reading</Button>
           </div>
         </CardContent>
       </Card>
 
       <div className="space-y-4">
         <h3 className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-4">Content</h3>
-        <Card className="border-none shadow-sm rounded-3xl divide-y">
+        <Card
+          className="border-none shadow-sm rounded-3xl divide-y cursor-pointer hover:bg-secondary/20 transition-colors bg-white shadow-sm"
+          onClick={() => router.push(`/app/quran/juz/${juzId}/read`)}
+        >
           <div className="p-6 flex items-center justify-between">
             <div>
-              <p className="font-bold">Starts at {juz.startSurah}</p>
-              <p className="text-xs text-muted-foreground">Ayah {juz.startAyah}</p>
+              <p className="font-bold tracking-tight">Read Full Juz</p>
+              <p className="text-xs text-muted-foreground">Starts at {juz.startSurah}, Ayah {juz.startAyah}</p>
             </div>
-            <Play className="w-5 h-5 text-primary opacity-40" />
+            <BookOpen className="w-5 h-5 text-primary opacity-40" />
           </div>
         </Card>
+      </div>
+
+      <div className="pt-8 flex items-center justify-between w-full">
+        <Button variant="outline" className="rounded-2xl" disabled={juz.index <= 1} onClick={() => router.push(`/app/quran/juz/${Number(juzId) - 1}`)}>
+          Previous Juz
+        </Button>
+        <Button variant="outline" className="rounded-2xl" disabled={juz.index >= 30} onClick={() => router.push(`/app/quran/juz/${Number(juzId) + 1}`)}>
+          Next Juz
+        </Button>
       </div>
     </div>
   );

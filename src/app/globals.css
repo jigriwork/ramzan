@@ -1,63 +1,110 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 240 10% 98%;
-    --foreground: 275 60% 10%;
+    /* Light Mode: Crisp off-white with warm sand accents and deep emerald */
+    --background: 160 25% 97%;
+    --foreground: 160 50% 10%;
+
+    --primary: 158 80% 28%;
+    /* Rich Emerald Green */
+    --primary-foreground: 160 10% 98%;
+
+    --secondary: 45 40% 88%;
+    /* Warm Sand/Gold tint */
+    --secondary-foreground: 45 80% 20%;
+
+    --muted: 160 10% 92%;
+    --muted-foreground: 160 20% 40%;
+
+    --accent: 45 80% 45%;
+    /* Gold Accent */
+    --accent-foreground: 0 0% 100%;
+
     --card: 0 0% 100%;
-    --card-foreground: 275 60% 10%;
+    --card-foreground: 160 50% 10%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 275 60% 10%;
-    --primary: 275 100% 25%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 275 30% 94%;
-    --secondary-foreground: 275 100% 25%;
-    --muted: 240 5% 94%;
-    --muted-foreground: 275 15% 35%;
-    --accent: 275 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 92%;
-    --input: 240 6% 92%;
-    --ring: 275 100% 25%;
+    --popover-foreground: 160 50% 10%;
+
+    --border: 160 20% 88%;
+    --input: 160 20% 88%;
+    --ring: 158 80% 28%;
+
     --radius: 1.5rem;
+    --shadow-color: 160 50% 8%;
   }
+
   .dark {
-    --background: 275 60% 5%;
-    --foreground: 275 20% 98%;
-    --card: 275 60% 8%;
-    --card-foreground: 275 20% 98%;
-    --popover: 275 60% 8%;
-    --popover-foreground: 275 20% 98%;
-    --primary: 275 100% 60%;
-    --primary-foreground: 275 60% 5%;
-    --secondary: 275 40% 15%;
-    --secondary-foreground: 275 100% 70%;
-    --muted: 275 40% 12%;
-    --muted-foreground: 275 20% 75%;
-    --accent: 275 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 30%;
+    /* Dark Mode: Deep Midnight Emerald with bright vibrant accents */
+    --background: 160 30% 7%;
+    --foreground: 160 20% 95%;
+
+    --primary: 158 75% 45%;
+    /* Brighter Emerald for Dark Mode */
+    --primary-foreground: 160 40% 5%;
+
+    --secondary: 45 40% 15%;
+    /* Deep dark gold/sand tone */
+    --secondary-foreground: 45 80% 85%;
+
+    --muted: 160 20% 12%;
+    --muted-foreground: 160 15% 65%;
+
+    --accent: 45 80% 45%;
+    --accent-foreground: 160 40% 5%;
+
+    --card: 160 25% 10%;
+    /* Slightly lighter than background */
+    --card-foreground: 160 20% 95%;
+
+    --popover: 160 25% 10%;
+    --popover-foreground: 160 20% 95%;
+
+    --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
-    --border: 275 40% 15%;
-    --input: 275 40% 15%;
-    --ring: 275 100% 60%;
+
+    --border: 160 20% 15%;
+    --input: 160 20% 15%;
+    --ring: 158 75% 45%;
+
+    --shadow-color: 160 50% 2%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border transition-colors duration-200;
   }
+
   body {
-    @apply bg-background text-foreground font-body text-[16px] antialiased leading-relaxed;
+    @apply bg-background text-foreground font-body text-base antialiased leading-relaxed;
   }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-headline font-bold tracking-tight;
+
+  h1 {
+    @apply font-headline text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+
+  h2 {
+    @apply font-headline text-3xl font-bold tracking-tight;
+  }
+
+  h3 {
+    @apply font-headline text-2xl font-bold tracking-tight;
+  }
+
+  h4 {
+    @apply font-headline text-xl font-bold tracking-tight;
+  }
+
+  h5 {
+    @apply font-headline text-lg font-semibold tracking-tight;
+  }
+
+  h6 {
+    @apply font-headline text-base font-semibold tracking-tight;
   }
 }
 
@@ -67,7 +114,7 @@
 }
 
 .islamic-pattern {
-  background-image: radial-gradient(circle at 2px 2px, rgba(75, 0, 130, 0.04) 1px, transparent 0);
+  background-image: radial-gradient(circle at 2px 2px, hsla(var(--primary) / 0.04) 1px, transparent 0);
   background-size: 32px 32px;
 }
 
@@ -84,12 +131,8 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Premium card shadow */
-.card-premium {
-  @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500;
 }

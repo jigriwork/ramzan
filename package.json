@@ -9,7 +9,8 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "tsx scripts/seed-firestore.ts"
   },
   "dependencies": {
     "@genkit-ai/google-genai": "^1.28.0",
@@ -42,18 +43,22 @@
     "embla-carousel-react": "^8.6.0",
     "firebase": "^11.9.1",
     "firebase-admin": "^13.6.1",
+    "framer-motion": "^12.34.4",
     "genkit": "^1.28.0",
     "lucide-react": "^0.475.0",
     "next": "15.5.9",
     "patch-package": "^8.0.0",
     "react": "^19.2.1",
     "react-day-picker": "^9.11.3",
+    "react-device-detect": "^2.2.3",
     "react-dom": "^19.2.1",
     "react-hook-form": "^7.54.2",
+    "react-use": "^17.6.0",
     "recharts": "^2.15.1",
-    "tailwind-merge": "^3.0.1",
+    "tailwind-merge": "^3.5.0",
     "tailwindcss-animate": "^1.0.7",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@types/node": "^20",

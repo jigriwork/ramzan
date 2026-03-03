@@ -5,14 +5,15 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useFirestore, useUser, useCollection, useMemoFirebase, ensureAuthForSaving } from '@/firebase';
-import { collection, query, where, orderBy, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { useFirestore, useUser, ensureAuthForSaving } from '@/firebase';
+import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { ChevronLeft, Share2, Bookmark, Heart, Play, Sparkles, Volume2, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/hooks/use-toast';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { quranService } from '@/services/quranService';
 
 export default function SurahDetailsPage() {
   const params = useParams();
@@ -21,16 +22,35 @@ export default function SurahDetailsPage() {
   const db = useFirestore();
   const [activeTranslation, setActiveTranslation] = useState('en');
   const [isAudioSheetOpen, setIsAudioSheetOpen] = useState(false);
+  const [ayahs, setAyahs] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const ayahsQuery = useMemoFirebase(() => {
-    return query(
-      collection(db, 'quran_ayahs'),
-      where('surahId', '==', String(surahIndex)),
-      orderBy('ayahNo', 'asc')
-    );
-  }, [db, surahIndex]);
-
-  const { data: ayahs, isLoading } = useCollection(ayahsQuery);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setIsLoading(true);
+      try {
+        const data = await quranService.getAyahsBySurah(String(surahIndex));
+        if (!cancelled) {
+          setAyahs(data);
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[SurahDetailsPage] ayahs loaded for surah ${surahIndex}:`, data.length);
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setAyahs([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [surahIndex]);
 
   useEffect(() => {
     if (!user) return;
@@ -116,9 +136,15 @@ export default function SurahDetailsPage() {
               <Skeleton className="h-4 w-1/2" />
             </div>
           ))
-        ) : ayahs?.map((ayah) => (
-          <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} onAudioClick={() => setIsAudioSheetOpen(true)} />
-        ))}
+        ) : ayahs?.length ? (
+          ayahs.map((ayah) => (
+            <AyahRow key={ayah.id} ayah={ayah} activeTranslation={activeTranslation} onAudioClick={() => setIsAudioSheetOpen(true)} />
+          ))
+        ) : (
+          <div className="text-center py-12 text-muted-foreground">
+            No ayahs available yet for this surah. Please run the full admin import from Profile to load complete Quran data.
+          </div>
+        )}
       </div>
 
       <Sheet open={isAudioSheetOpen} onOpenChange={setIsAudioSheetOpen}>

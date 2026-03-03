@@ -10,12 +10,8 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Development-safe admin gate.
-    // TODO: Replace with custom claims role check (e.g. request.auth.token.admin == true)
-    // once production admin management is finalized.
     function isAdmin() {
-      return request.auth != null &&
-        request.auth.token.email_verified == true;
+      return request.auth != null && request.auth.token.admin == true;
     }
 
     // Public content: readable by all, writable by admin only.
@@ -35,6 +31,11 @@ service cloud.firestore {
     }
 
     match /dua_collections/{collectionId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /namaz_steps/{stepId} {
       allow read: if true;
       allow write: if isAdmin();
     }

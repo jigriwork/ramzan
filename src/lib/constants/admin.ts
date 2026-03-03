@@ -1,11 +1,9 @@
 /**
  * Admin access is intentionally NOT hardcoded by email.
  *
- * Development currently relies on Firestore rules that allow writes for
- * verified-email users where needed.
+ * The app now relies on Firebase custom claims for admin authorization:
+ * `request.auth.token.admin == true`
  *
- * TODO: Replace this placeholder strategy with Firebase custom claims
- * (e.g. `request.auth.token.admin == true`) once backend admin role
- * management is finalized.
+ * Bootstrap/promote/demote APIs are provided under /api/admin/* routes.
  */
-export const ADMIN_ROLE_STRATEGY = 'custom-claims-pending';
+export const ADMIN_ROLE_STRATEGY = 'custom-claims';

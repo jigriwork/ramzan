@@ -6,8 +6,8 @@ import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { NAMAZ_STEPS } from '@/lib/data/seed';
-import { ChevronRight, ChevronLeft, CheckCircle2, Star } from 'lucide-react';
+import { namazService, NamazStep } from '@/services/namazService';
+import { ChevronRight, ChevronLeft, CheckCircle2, Star, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -16,10 +16,27 @@ import { toast } from '@/hooks/use-toast';
 export default function LearnNamazPage() {
   const db = useFirestore();
   const { user } = useUser();
+  const [steps, setSteps] = useState<NamazStep[]>([]);
+  const [loading, setLoading] = useState(true);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isKidsMode, setIsKidsMode] = useState(false);
-  const currentStep = NAMAZ_STEPS[currentStepIndex];
-  const progress = ((currentStepIndex + 1) / NAMAZ_STEPS.length) * 100;
+
+  useEffect(() => {
+    namazService.getSteps().then(data => {
+      setSteps(data);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-20 text-muted-foreground flex justify-center"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+  }
+
+  if (!steps || steps.length === 0) {
+    return <div className="text-center py-20 text-muted-foreground">Namaz steps are not available yet.</div>;
+  }
+  const currentStep = steps[currentStepIndex];
+  const progress = ((currentStepIndex + 1) / steps.length) * 100;
 
   useEffect(() => {
     const cached = localStorage.getItem('learn_namaz_progress');
@@ -27,13 +44,13 @@ export default function LearnNamazPage() {
       try {
         const parsed = JSON.parse(cached) as { stepIndex?: number };
         if (typeof parsed.stepIndex === 'number') {
-          setCurrentStepIndex(Math.max(0, Math.min(parsed.stepIndex, NAMAZ_STEPS.length - 1)));
+          setCurrentStepIndex(Math.max(0, Math.min(parsed.stepIndex, steps.length - 1)));
         }
       } catch {
         // ignore corrupt cache
       }
     }
-  }, []);
+  }, [steps.length]);
 
   useEffect(() => {
     if (!user) return;
@@ -45,12 +62,12 @@ export default function LearnNamazPage() {
         if (cancelled || !snap.exists()) return;
         const data = snap.data() as { stepIndex?: number; completed?: boolean; completedAt?: string };
         if (typeof data.stepIndex === 'number') {
-          setCurrentStepIndex(Math.max(0, Math.min(data.stepIndex, NAMAZ_STEPS.length - 1)));
+          setCurrentStepIndex(Math.max(0, Math.min(data.stepIndex, steps.length - 1)));
         }
         localStorage.setItem('learn_namaz_progress', JSON.stringify({
           completed: Boolean(data.completed),
           completedAt: data.completedAt ?? null,
-          stepIndex: typeof data.stepIndex === 'number' ? data.stepIndex : currentStepIndex,
+          stepIndex: typeof data.stepIndex === 'number' ? data.stepIndex : 0,
         }));
       } catch {
         toast({
@@ -64,10 +81,14 @@ export default function LearnNamazPage() {
     return () => {
       cancelled = true;
     };
-  }, [db, user]);
+  }, [db, user, steps.length]);
+
+  useEffect(() => {
+    setCurrentStepIndex((prev) => Math.max(0, Math.min(prev, steps.length - 1)));
+  }, [steps.length]);
 
   const nextStep = () => {
-    if (currentStepIndex < NAMAZ_STEPS.length - 1) {
+    if (currentStepIndex < steps.length - 1) {
       setCurrentStepIndex(currentStepIndex + 1);
     }
   };
@@ -112,8 +133,8 @@ export default function LearnNamazPage() {
         </div>
         <div className="flex items-center space-x-2 bg-secondary/30 p-2 rounded-2xl border">
           <Label htmlFor="kids-mode" className="text-xs font-bold uppercase tracking-tighter flex items-center gap-1">
-             <Star className={cn("w-3 h-3 transition-colors", isKidsMode ? "text-yellow-500 fill-current" : "text-muted-foreground")} /> 
-             Kids Mode
+            <Star className={cn("w-3 h-3 transition-colors", isKidsMode ? "text-yellow-500 fill-current" : "text-muted-foreground")} />
+            Kids Mode
           </Label>
           <Switch id="kids-mode" checked={isKidsMode} onCheckedChange={setIsKidsMode} />
         </div>
@@ -121,8 +142,8 @@ export default function LearnNamazPage() {
 
       <div className="space-y-2">
         <div className="flex justify-between text-xs font-bold text-muted-foreground uppercase tracking-widest px-1">
-           <span>Step {currentStepIndex + 1} of {NAMAZ_STEPS.length}</span>
-           <span>{Math.round(progress)}% Complete</span>
+          <span>Step {currentStepIndex + 1} of {steps.length}</span>
+          <span>{Math.round(progress)}% Complete</span>
         </div>
         <Progress value={progress} className="h-3 rounded-full" />
       </div>
@@ -143,7 +164,7 @@ export default function LearnNamazPage() {
               {currentStep.instruction}
             </p>
           </div>
-          
+
           <div className="p-10 space-y-8">
             <div className="space-y-4">
               <p className={cn(
@@ -186,16 +207,16 @@ export default function LearnNamazPage() {
       </Card>
 
       <div className="flex gap-4">
-        <Button 
-          variant="outline" 
-          size="lg" 
+        <Button
+          variant="outline"
+          size="lg"
           className="flex-1 h-14 rounded-2xl font-bold"
           onClick={prevStep}
           disabled={currentStepIndex === 0}
         >
           <ChevronLeft className="w-5 h-5 mr-2" /> Previous
         </Button>
-        {currentStepIndex === NAMAZ_STEPS.length - 1 ? (
+        {currentStepIndex === steps.length - 1 ? (
           <Button size="lg" className="flex-1 h-14 rounded-2xl font-bold bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-200" onClick={handleFinishGuide}>
             <CheckCircle2 className="w-5 h-5 mr-2" /> Finish Guide
           </Button>

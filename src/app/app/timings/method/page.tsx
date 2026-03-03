@@ -54,17 +54,16 @@ export default function TimingsMethodPage() {
   }, [db, user]);
 
   const handleSave = async () => {
+    settingsService.saveSettings({ calculationMethod: current });
     try {
       const activeUser = await ensureAuthForSaving();
       await setDoc(doc(db, 'users', activeUser.uid), {
         calculationMethod: current,
         updatedAt: new Date().toISOString(),
       }, { merge: true });
-      settingsService.saveSettings({ calculationMethod: current });
       toast({ title: "Settings Saved", description: "Your timings will update shortly." });
       router.back();
     } catch {
-      settingsService.saveSettings({ calculationMethod: current });
       toast({
         variant: 'destructive',
         title: 'Save Failed',

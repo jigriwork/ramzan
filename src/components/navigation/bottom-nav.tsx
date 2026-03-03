@@ -22,8 +22,8 @@ export function BottomNav() {
         {navItems.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           return (
-            <Link 
-              key={item.href} 
+            <Link
+              key={item.href}
               href={item.href}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 w-full h-full transition-colors",

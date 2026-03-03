@@ -14,24 +14,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function RamadanTargetsPage() {
   const router = useRouter();
   const { mode } = useAppSettings();
+  const ramadanInfo = ramadanService.getCurrentRamadanInfo();
   const [tasks, setTasks] = useState<any[]>([]);
   const [completed, setCompleted] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     ramadanService.getChecklist().then(data => {
       setTasks(data);
-      setCompleted(ramadanService.getCompletion(1)); // Mock day 1
+      setCompleted(ramadanService.getCompletion(ramadanInfo.day));
+      setStreak(ramadanService.getStreak());
       setLoading(false);
     });
-  }, []);
+  }, [ramadanInfo.day]);
 
   const toggleTask = (id: string) => {
     const newCompleted = completed.includes(id) 
       ? completed.filter(i => i !== id) 
       : [...completed, id];
     setCompleted(newCompleted);
-    ramadanService.saveCompletion(1, newCompleted);
+    ramadanService.saveCompletion(ramadanInfo.day, newCompleted);
+    setStreak(ramadanService.getStreak());
   };
 
   const progress = tasks.length > 0 ? (completed.length / tasks.length) * 100 : 0;
@@ -60,7 +64,7 @@ export default function RamadanTargetsPage() {
              </div>
              <div className="text-right">
                <p className="text-[10px] font-black uppercase opacity-60 mb-1">Current Streak</p>
-               <p className="text-xl font-bold flex items-center justify-end gap-1"><Star className="w-5 h-5 fill-amber-400 text-amber-400" /> 5 Days</p>
+               <p className="text-xl font-bold flex items-center justify-end gap-1"><Star className="w-5 h-5 fill-amber-400 text-amber-400" /> {streak} Days</p>
              </div>
           </div>
           <div className="h-3 bg-white/20 rounded-full overflow-hidden">

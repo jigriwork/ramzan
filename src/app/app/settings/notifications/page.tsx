@@ -31,37 +31,49 @@ export default function NotificationsSettingsPage() {
       </header>
 
       <Card className="border-none shadow-sm rounded-[2.5rem] bg-white divide-y overflow-hidden">
-        <NotificationItem 
-          icon={<Clock className="text-blue-500" />} 
-          label="Prayer Times" 
+        <NotificationItem
+          icon={<Clock className="text-blue-500" />}
+          label="Prayer Times"
           desc="Alerts for Fajr, Dhuhr, Asr, Maghrib, Isha"
           checked={notifs.prayers}
-          onChange={(v) => setNotifs({...notifs, prayers: v})}
+          onChange={(v: boolean) => setNotifs({ ...notifs, prayers: v })}
         />
-        <NotificationItem 
-          icon={<Bell className="text-amber-500" />} 
-          label="Iftar & Sehri" 
+        <NotificationItem
+          icon={<Bell className="text-amber-500" />}
+          label="Iftar & Sehri"
           desc="Countdowns and end-of-fast alerts"
           checked={notifs.iftar}
-          onChange={(v) => setNotifs({...notifs, iftar: v})}
+          onChange={(v: boolean) => setNotifs({ ...notifs, iftar: v })}
         />
-        <NotificationItem 
-          icon={<Sparkles className="text-purple-500" />} 
-          label="Daily Insights" 
+        <NotificationItem
+          icon={<Sparkles className="text-purple-500" />}
+          label="Daily Insights"
           desc="Spiritual reminders and daily Duas"
           checked={notifs.dua}
-          onChange={(v) => setNotifs({...notifs, dua: v})}
+          onChange={(v: boolean) => setNotifs({ ...notifs, dua: v })}
         />
       </Card>
 
       <p className="text-center text-xs text-muted-foreground italic px-8">
-        Real-time push notifications require browser permission. Toggles are for UI demonstration.
+        Real-time push notifications require browser permission.
       </p>
     </div>
   );
 }
 
-function NotificationItem({ icon, label, desc, checked, onChange }: any) {
+function NotificationItem({
+  icon,
+  label,
+  desc,
+  checked,
+  onChange,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  desc: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
   return (
     <div className="p-8 flex items-center justify-between">
       <div className="flex items-center gap-5">

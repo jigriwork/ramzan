@@ -8,6 +8,7 @@ import {
   sendPasswordResetEmail,
   signInAnonymously,
   signInWithEmailAndPassword,
+  updateProfile,
   type User,
 } from 'firebase/auth';
 import { getApp, getApps, initializeApp } from 'firebase/app';
@@ -38,9 +39,14 @@ export function signInEmail(email: string, password: string) {
   return signInWithEmailAndPassword(auth, email, password);
 }
 
-export function registerEmail(email: string, password: string) {
+export async function registerEmail(email: string, password: string, name?: string) {
   const auth = getAuthInstance();
-  return createUserWithEmailAndPassword(auth, email, password);
+  const credential = await createUserWithEmailAndPassword(auth, email, password);
+  const trimmedName = name?.trim();
+  if (trimmedName) {
+    await updateProfile(credential.user, { displayName: trimmedName });
+  }
+  return credential;
 }
 
 export function sendReset(email: string) {

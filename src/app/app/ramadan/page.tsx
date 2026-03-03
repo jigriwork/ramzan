@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Calendar, Target, Heart, Sparkles, ChevronRight, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ramadanService } from '@/services/ramadanService';
 
 export default function RamadanDashboard() {
   const [loading, setLoading] = useState(true);
+  const [ramadanInfo, setRamadanInfo] = useState(ramadanService.getCurrentRamadanInfo());
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
+    setRamadanInfo(ramadanService.getCurrentRamadanInfo());
   }, []);
 
   if (loading) return (
@@ -39,7 +42,7 @@ export default function RamadanDashboard() {
           <div className="flex justify-between items-start">
             <div className="space-y-1">
               <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">Ramadan 1446 AH</p>
-              <h3 className="text-2xl font-black">Day 1: Mercy</h3>
+              <h3 className="text-2xl font-black">Day {ramadanInfo.day}: {ramadanInfo.ashra}</h3>
             </div>
             <Sparkles className="w-6 h-6 text-yellow-400" />
           </div>

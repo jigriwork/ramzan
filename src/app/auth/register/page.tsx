@@ -24,13 +24,18 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorText('');
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setErrorText('Name is required.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      const credential = await registerEmail(email, password);
+      const credential = await registerEmail(email, password, trimmedName);
       await setDoc(
         doc(db, 'users', credential.user.uid),
         {
-          name: name || '',
+          name: trimmedName,
           city: '',
           mode: 'adult',
           theme: 'system',
@@ -77,7 +82,7 @@ export default function RegisterPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
              <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
-              <Input id="name" type="text" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input id="name" type="text" placeholder="Enter your name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

@@ -2,7 +2,7 @@
 "use client"
 
 import Link from 'next/link';
-import { User, Moon, MoreHorizontal, LayoutGrid, Heart, Sparkles, Settings, Baby } from 'lucide-react';
+import { User, Moon, MoreHorizontal, LayoutGrid, Heart, Sparkles, Settings, Baby, BookOpen, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
@@ -20,7 +20,7 @@ export function TopNav() {
           </div>
           <span className="text-xl font-headline font-bold text-primary">NoorRamadan</span>
         </Link>
-        
+
         <div className="flex items-center gap-2">
           <nav className="hidden md:flex items-center gap-6 mr-6 text-sm font-black uppercase tracking-widest text-primary/60">
             <Link href="/app/quran" className="hover:text-primary transition-colors">Quran</Link>
@@ -35,23 +35,38 @@ export function TopNav() {
                 <MoreHorizontal className="w-6 h-6 text-primary" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-[2rem] p-3 shadow-2xl border-none">
-              <DropdownMenuItem asChild>
-                <Link href="/app/ramadan" className="rounded-2xl p-4 font-black uppercase text-xs tracking-widest flex items-center gap-3">
+            <DropdownMenuContent align="end" className="w-56 rounded-3xl p-2 shadow-2xl border-none space-y-1 bg-white">
+              <DropdownMenuItem asChild className="rounded-2xl p-3 cursor-pointer hover:bg-slate-50">
+                <Link href="/app/ramadan" className="font-bold uppercase text-xs tracking-widest flex items-center gap-3 w-full text-foreground">
                   <Sparkles className="w-4 h-4 text-amber-500" /> Ramadan Hub
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/app/kids" className="rounded-2xl p-4 font-black uppercase text-xs tracking-widest flex items-center gap-3">
+              <DropdownMenuItem asChild className="rounded-2xl p-3 cursor-pointer hover:bg-slate-50">
+                <Link href="/app/kids" className="font-bold uppercase text-xs tracking-widest flex items-center gap-3 w-full text-foreground">
                   <Baby className="w-4 h-4 text-blue-500" /> Kids Zone
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/app/settings" className="rounded-2xl p-4 font-black uppercase text-xs tracking-widest flex items-center gap-3">
+              <DropdownMenuSeparator className="my-1 bg-slate-100" />
+              <DropdownMenuItem asChild className="rounded-2xl p-3 cursor-pointer hover:bg-slate-50">
+                <Link href="/app/settings" className="font-bold uppercase text-xs tracking-widest flex items-center gap-3 w-full text-foreground">
                   <Settings className="w-4 h-4 text-slate-500" /> Settings
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild className="rounded-2xl p-3 cursor-pointer hover:bg-slate-50">
+                <Link href="/app/sources" className="font-bold uppercase text-xs tracking-widest flex items-center gap-3 w-full text-foreground">
+                  <BookOpen className="w-4 h-4 text-slate-500" /> Sources
+                </Link>
+              </DropdownMenuItem>
+              {!user || user.isAnonymous ? (
+                <>
+                  <DropdownMenuSeparator className="my-1 bg-slate-100" />
+                  <DropdownMenuItem asChild className="rounded-2xl p-3 cursor-pointer hover:bg-slate-50">
+                    <Link href="/auth/login" className="font-bold uppercase text-xs tracking-widest flex items-center gap-3 w-full text-foreground">
+                      <LogIn className="w-4 h-4 text-emerald-600" /> Login
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
 

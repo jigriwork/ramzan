@@ -104,6 +104,7 @@ function DuaCompactCard({ dua }: any) {
       </CardHeader>
       <CardContent className="p-8 space-y-4">
         <p className="text-2xl arabic-font text-right line-clamp-1">{dua.arabic}</p>
+        <p className="text-sm italic text-muted-foreground/70 line-clamp-1">{dua.transliteration}</p>
         <p className="text-sm text-muted-foreground font-medium line-clamp-2">{dua.translation_en}</p>
       </CardContent>
     </Card>

@@ -9,11 +9,19 @@ import { Search, MapPin, CalendarDays, Clock, Loader2, Settings2 } from 'lucide-
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { locationService, type DetectedLocation } from '@/services/locationService';
+import { timingsService, type PrayerTimesResult } from '@/services/timingsService';
+import { settingsService } from '@/services/settingsService';
+import { useFirestore, useUser } from '@/firebase';
 
 export default function TimingsPage() {
   const { city, setCity } = useAppSettings();
+  const db = useFirestore();
+  const { user } = useUser();
   const [searchInput, setSearchInput] = useState('');
-  const [timings, setTimings] = useState<any>(null);
+  const [timings, setTimings] = useState<PrayerTimesResult | null>(null);
+  const [locationInfo, setLocationInfo] = useState<DetectedLocation | null>(null);
+  const [offlineTimingsShown, setOfflineTimingsShown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [currentDateDisplay, setCurrentDateDisplay] = useState<string>('');
 
@@ -22,18 +30,25 @@ export default function TimingsPage() {
     setCurrentDateDisplay(new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }));
   }, []);
 
-  const fetchTimings = async (cityName: string) => {
-    if (!cityName) return;
+  const fetchTimings = async (forceRefreshLocation = false) => {
     setLoading(true);
     try {
-      const response = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${cityName}&country=India&method=1&adjustment=-1`);
-      const data = await response.json();
-      if (data.code === 200) {
-        setTimings(data.data.timings);
-      } else {
-        toast({ variant: "destructive", title: "City Not Found", description: "Please check the spelling." });
-      }
-    } catch (error) {
+      const detected = await locationService.detectLocation({
+        db,
+        uid: user?.uid,
+        preferredCity: city || undefined,
+        forceRefresh: forceRefreshLocation,
+      });
+      const method = settingsService.getCalculationMethod();
+      const response = await timingsService.getPrayerTimes({
+        lat: detected.latitude,
+        lon: detected.longitude,
+        method,
+      });
+      setLocationInfo(detected);
+      setTimings(response);
+      setOfflineTimingsShown(Boolean(response.isOfflineFallback));
+    } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to fetch timings." });
     } finally {
       setLoading(false);
@@ -41,8 +56,44 @@ export default function TimingsPage() {
   };
 
   useEffect(() => {
-    fetchTimings(city || 'Berhampur');
-  }, [city]);
+    void fetchTimings();
+  }, [city, user?.uid]);
+
+  useEffect(() => {
+    const onSettingsUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<{ calculationMethod?: number }>).detail;
+      if (typeof detail?.calculationMethod === 'number') {
+        void fetchTimings();
+      }
+    };
+    window.addEventListener('app-settings-updated', onSettingsUpdated as EventListener);
+    return () => {
+      window.removeEventListener('app-settings-updated', onSettingsUpdated as EventListener);
+    };
+  }, [city, user?.uid]);
+
+  useEffect(() => {
+    let lastDay = new Date().toDateString();
+    let lastMethod = settingsService.getCalculationMethod();
+    const timer = setInterval(() => {
+      const now = new Date();
+      const currentDay = now.toDateString();
+      const currentMethod = settingsService.getCalculationMethod();
+      if (currentDay !== lastDay || currentMethod !== lastMethod) {
+        lastDay = currentDay;
+        lastMethod = currentMethod;
+        void fetchTimings();
+      }
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [city, user?.uid]);
+
+  useEffect(() => {
+    const locationTimer = setInterval(() => {
+      void fetchTimings(true);
+    }, 10 * 60 * 1000);
+    return () => clearInterval(locationTimer);
+  }, [city, user?.uid]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +102,8 @@ export default function TimingsPage() {
     }
   };
 
-  const format12h = (time24: string) => {
+  const format12h = (time24: string | undefined) => {
+    if (!time24) return '--:--';
     const [hoursStr, minutesStr] = time24.split(':');
     const hours = parseInt(hoursStr, 10);
     const period = hours >= 12 ? 'PM' : 'AM';
@@ -60,19 +112,19 @@ export default function TimingsPage() {
   };
 
   const formattedTimings = timings ? [
-    { name: 'Fajr', time: format12h(timings.Fajr) },
-    { name: 'Sunrise', time: format12h(timings.Sunrise) },
-    { name: 'Dhuhr', time: format12h(timings.Dhuhr) },
-    { name: 'Asr', time: format12h(timings.Asr) },
-    { name: 'Maghrib (Iftar)', time: format12h(timings.Maghrib) },
-    { name: 'Isha', time: format12h(timings.Isha) },
+    { name: 'Fajr', time: format12h(timings.fajr) },
+    { name: 'Sunrise', time: format12h(timings.sunrise) },
+    { name: 'Dhuhr', time: format12h(timings.dhuhr) },
+    { name: 'Asr', time: format12h(timings.asr) },
+    { name: 'Maghrib (Iftar)', time: format12h(timings.maghrib) },
+    { name: 'Isha', time: format12h(timings.isha) },
   ] : [];
 
   return (
     <div className="space-y-6 pb-24">
       <header className="flex flex-col gap-2">
         <h2 className="text-3xl font-headline font-bold text-primary">Prayer Timings</h2>
-        <p className="text-muted-foreground">Accurate timings for {city || 'Berhampur'}, India</p>
+        <p className="text-muted-foreground">Accurate timings for {locationInfo?.city || city || 'Makkah'}, {locationInfo?.country || 'Saudi Arabia'}</p>
       </header>
 
       <div className="grid grid-cols-1 gap-4">
@@ -120,6 +172,9 @@ export default function TimingsPage() {
               <span className="text-sm font-bold text-primary px-3 py-1 rounded-full italic">{currentDateDisplay || "Loading..."}</span>
             </CardHeader>
             <CardContent className="p-0">
+              {offlineTimingsShown && (
+                <p className="px-6 py-3 text-[11px] font-medium text-muted-foreground border-b bg-secondary/20">Offline timings shown</p>
+              )}
               <div className="divide-y">
                 {formattedTimings.map((prayer) => (
                   <div key={prayer.name} className="flex items-center justify-between p-6 hover:bg-secondary/10 transition-colors">
