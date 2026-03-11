@@ -1,22 +1,26 @@
 
 "use client"
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { ChevronLeft, Bell, Clock, Sparkles } from 'lucide-react';
+import { ChevronLeft, Bell, Clock, Sparkles, Baby } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { settingsService } from '@/services/settingsService';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
 
 export default function NotificationsSettingsPage() {
   const router = useRouter();
-  const [notifs, setNotifs] = useState({
-    prayers: true,
-    iftar: true,
-    dua: false,
-    kids: true
-  });
+  const {
+    notifPrayer,
+    notifIftar,
+    notifDua,
+    notifKids,
+    setNotifPrayer,
+    setNotifIftar,
+    setNotifDua,
+    setNotifKids,
+  } = useAppSettings();
 
   return (
     <div className="space-y-8 pb-24">
@@ -35,22 +39,29 @@ export default function NotificationsSettingsPage() {
           icon={<Clock className="text-blue-500" />}
           label="Prayer Times"
           desc="Alerts for Fajr, Dhuhr, Asr, Maghrib, Isha"
-          checked={notifs.prayers}
-          onChange={(v: boolean) => setNotifs({ ...notifs, prayers: v })}
+          checked={notifPrayer}
+          onChange={setNotifPrayer}
         />
         <NotificationItem
           icon={<Bell className="text-amber-500" />}
           label="Iftar & Sehri"
           desc="Countdowns and end-of-fast alerts"
-          checked={notifs.iftar}
-          onChange={(v: boolean) => setNotifs({ ...notifs, iftar: v })}
+          checked={notifIftar}
+          onChange={setNotifIftar}
         />
         <NotificationItem
           icon={<Sparkles className="text-purple-500" />}
           label="Daily Insights"
           desc="Spiritual reminders and daily Duas"
-          checked={notifs.dua}
-          onChange={(v: boolean) => setNotifs({ ...notifs, dua: v })}
+          checked={notifDua}
+          onChange={setNotifDua}
+        />
+        <NotificationItem
+          icon={<Baby className="text-pink-500" />}
+          label="Kids Learning"
+          desc="Stories, quiz, and deeds reminders"
+          checked={notifKids}
+          onChange={setNotifKids}
         />
       </Card>
 

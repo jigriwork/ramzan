@@ -8,15 +8,66 @@ import { Calendar, Target, Heart, Sparkles, ChevronRight, CheckCircle2 } from 'l
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ramadanService } from '@/services/ramadanService';
+import { useFirestore, useUser } from '@/firebase';
+import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { locationService } from '@/services/locationService';
+import { timingsService } from '@/services/timingsService';
+import { settingsService } from '@/services/settingsService';
 
 export default function RamadanDashboard() {
+  const db = useFirestore();
+  const { user } = useUser();
+  const { city } = useAppSettings();
   const [loading, setLoading] = useState(true);
   const [ramadanInfo, setRamadanInfo] = useState(ramadanService.getCurrentRamadanInfo());
+  const [sehriTime, setSehriTime] = useState('--:--');
+  const [iftarTime, setIftarTime] = useState('--:--');
+
+  const format12h = (time24: string | undefined) => {
+    if (!time24) return '--:--';
+    const [hoursStr, minutesStr] = time24.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const h12 = hours % 12 || 12;
+    return `${h12}:${minutesStr} ${period}`;
+  };
+
+  const loadTimings = async () => {
+    try {
+      const detected = await locationService.detectLocation({
+        db,
+        uid: user?.uid,
+        preferredCity: city || undefined,
+      });
+      const method = settingsService.getCalculationMethod();
+      const response = await timingsService.getPrayerTimes({
+        lat: detected.latitude,
+        lon: detected.longitude,
+        method,
+      });
+      setSehriTime(format12h(response.fajr));
+      setIftarTime(format12h(response.maghrib));
+    } catch {
+      setSehriTime('--:--');
+      setIftarTime('--:--');
+    }
+  };
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-    setRamadanInfo(ramadanService.getCurrentRamadanInfo());
-  }, []);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      await loadTimings();
+      if (!cancelled) {
+        setRamadanInfo(ramadanService.getCurrentRamadanInfo());
+        setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [city, user?.uid]);
 
   if (loading) return (
     <div className="space-y-8 pb-24">
@@ -49,11 +100,11 @@ export default function RamadanDashboard() {
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 p-4 rounded-3xl backdrop-blur-md">
               <p className="text-[10px] opacity-60 font-bold uppercase">Sehri Ends</p>
-              <p className="text-xl font-black">4:52 AM</p>
+              <p className="text-xl font-black">{sehriTime}</p>
             </div>
             <div className="bg-white/10 p-4 rounded-3xl backdrop-blur-md">
               <p className="text-[10px] opacity-60 font-bold uppercase">Iftar Today</p>
-              <p className="text-xl font-black">6:21 PM</p>
+              <p className="text-xl font-black">{iftarTime}</p>
             </div>
           </div>
         </CardContent>

@@ -46,3 +46,77 @@ A premium Ramadan + Deen companion app built with Next.js, Firebase, and Tailwin
 *   **Duas**: Collection of essential Ramadan and daily supplications.
 *   **Dashboard**: High-end Islamic aesthetic with Today's Iftar highlight.
 *   **GenAI**: Personalized spiritual insights based on user activity (requires GenAI keys).
+
+## Backend Schema Notes (Phase 0: Stability + Trust)
+
+### 1) Ramadan Targets Contract
+`ramadanService.getChecklist()` now normalizes all checklist records to:
+
+```ts
+{ id: string, label: string, category?: string, points?: number }
+```
+
+Both Firestore-backed and fallback records are normalized to this shape.
+
+### 2) Kids Content Contracts
+
+#### Kids Quiz
+`kidsService.getQuizzes()` always returns:
+
+```ts
+{
+  id: string,
+  title: string,
+  description?: string,
+  questions: Array<{
+    question: string,
+    options: string[],
+    correctIndex: number,
+    explanation?: string,
+  }>
+}
+```
+
+#### Kids Stories
+`kidsService.getStories()` / `getStoryById()` always return:
+
+```ts
+{ id: string, title: string, short: string, content: string, moral?: string }
+```
+
+If `short` is missing in source data, it is auto-generated from the first 140 chars of `content`.
+
+### 3) Ramadan Calendar Completion Persistence
+
+Firestore path used for authenticated users:
+
+```text
+users/{uid}/ramadan/{year}/days/{dayNumber}
+```
+
+Document shape:
+
+```ts
+{ completed: boolean, completedAt: string | null }
+```
+
+For anonymous users, completion is saved locally first and synced to Firestore after auth/upgrade when calendar sync runs.
+
+### 4) Notification Preferences Persistence (no push yet)
+
+Notification toggles are now persisted in both local cache and Firestore under:
+
+```text
+users/{uid}.settings
+```
+
+Fields:
+
+```ts
+{
+  notif_prayer: boolean,
+  notif_iftar: boolean,
+  notif_dua: boolean,
+  notif_kids: boolean,
+}
+```

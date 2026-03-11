@@ -19,6 +19,10 @@ interface AppSettingsContextType {
   showTransliteration: boolean;
   arabicFontSize: FontSize;
   uiTextSize: FontSize;
+  notifPrayer: boolean;
+  notifIftar: boolean;
+  notifDua: boolean;
+  notifKids: boolean;
   setTheme: (theme: Theme) => void;
   setMode: (mode: Mode) => void;
   setCity: (city: string) => void;
@@ -26,6 +30,10 @@ interface AppSettingsContextType {
   setShowTransliteration: (show: boolean) => void;
   setArabicFontSize: (size: FontSize) => void;
   setUiTextSize: (size: FontSize) => void;
+  setNotifPrayer: (value: boolean) => void;
+  setNotifIftar: (value: boolean) => void;
+  setNotifDua: (value: boolean) => void;
+  setNotifKids: (value: boolean) => void;
 }
 
 const AppSettingsContext = createContext<AppSettingsContextType | undefined>(undefined);
@@ -38,6 +46,10 @@ const STORAGE_KEYS = {
   transliteration: 'app_trans',
   arabicFontSize: 'app_font_size',
   uiTextSize: 'app_ui_size',
+  notifPrayer: 'app_notif_prayer',
+  notifIftar: 'app_notif_iftar',
+  notifDua: 'app_notif_dua',
+  notifKids: 'app_notif_kids',
 } as const;
 
 export function AppSettingsProvider({ children }: { children: React.ReactNode }) {
@@ -50,6 +62,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
   const [showTransliteration, setShowTransliterationState] = useState<boolean>(true);
   const [arabicFontSize, setArabicFontSizeState] = useState<FontSize>('medium');
   const [uiTextSize, setUiTextSizeState] = useState<FontSize>('medium');
+  const [notifPrayer, setNotifPrayerState] = useState<boolean>(true);
+  const [notifIftar, setNotifIftarState] = useState<boolean>(true);
+  const [notifDua, setNotifDuaState] = useState<boolean>(false);
+  const [notifKids, setNotifKidsState] = useState<boolean>(true);
 
   const applyCachedSettings = () => {
     if (typeof window === 'undefined') return;
@@ -61,6 +77,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
       trans: localStorage.getItem(STORAGE_KEYS.transliteration) === 'false' ? false : true,
       fontSize: localStorage.getItem(STORAGE_KEYS.arabicFontSize) as FontSize,
       uiSize: localStorage.getItem(STORAGE_KEYS.uiTextSize) as FontSize,
+      notifPrayer: localStorage.getItem(STORAGE_KEYS.notifPrayer) === null ? true : localStorage.getItem(STORAGE_KEYS.notifPrayer) === 'true',
+      notifIftar: localStorage.getItem(STORAGE_KEYS.notifIftar) === null ? true : localStorage.getItem(STORAGE_KEYS.notifIftar) === 'true',
+      notifDua: localStorage.getItem(STORAGE_KEYS.notifDua) === null ? false : localStorage.getItem(STORAGE_KEYS.notifDua) === 'true',
+      notifKids: localStorage.getItem(STORAGE_KEYS.notifKids) === null ? true : localStorage.getItem(STORAGE_KEYS.notifKids) === 'true',
     };
 
     if (saved.theme) setThemeState(saved.theme);
@@ -70,6 +90,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     setShowTransliterationState(saved.trans);
     if (saved.fontSize) setArabicFontSizeState(saved.fontSize);
     if (saved.uiSize) setUiTextSizeState(saved.uiSize);
+    setNotifPrayerState(saved.notifPrayer);
+    setNotifIftarState(saved.notifIftar);
+    setNotifDuaState(saved.notifDua);
+    setNotifKidsState(saved.notifKids);
   };
 
   const cacheSettings = (patch: Partial<{
@@ -80,6 +104,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     transliteration: boolean;
     arabicFontSize: FontSize;
     uiTextSize: FontSize;
+    notifPrayer: boolean;
+    notifIftar: boolean;
+    notifDua: boolean;
+    notifKids: boolean;
   }>) => {
     if (typeof window === 'undefined') return;
     if (patch.theme !== undefined) localStorage.setItem(STORAGE_KEYS.theme, patch.theme);
@@ -89,6 +117,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     if (patch.transliteration !== undefined) localStorage.setItem(STORAGE_KEYS.transliteration, String(patch.transliteration));
     if (patch.arabicFontSize !== undefined) localStorage.setItem(STORAGE_KEYS.arabicFontSize, patch.arabicFontSize);
     if (patch.uiTextSize !== undefined) localStorage.setItem(STORAGE_KEYS.uiTextSize, patch.uiTextSize);
+    if (patch.notifPrayer !== undefined) localStorage.setItem(STORAGE_KEYS.notifPrayer, String(patch.notifPrayer));
+    if (patch.notifIftar !== undefined) localStorage.setItem(STORAGE_KEYS.notifIftar, String(patch.notifIftar));
+    if (patch.notifDua !== undefined) localStorage.setItem(STORAGE_KEYS.notifDua, String(patch.notifDua));
+    if (patch.notifKids !== undefined) localStorage.setItem(STORAGE_KEYS.notifKids, String(patch.notifKids));
   };
 
   useEffect(() => {
@@ -114,6 +146,10 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
           transliteration: boolean;
           arabicFontSize: FontSize;
           uiTextSize: FontSize;
+          notifPrayer: boolean;
+          notifIftar: boolean;
+          notifDua: boolean;
+          notifKids: boolean;
         }> = {};
 
         if (typeof data.theme === 'string') {
@@ -143,6 +179,29 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
         if (typeof data.uiTextSize === 'string') {
           setUiTextSizeState(data.uiTextSize as FontSize);
           patch.uiTextSize = data.uiTextSize as FontSize;
+        }
+
+        const settings = (data.settings && typeof data.settings === 'object') ? (data.settings as Record<string, unknown>) : null;
+        const notifPrayerRaw = settings?.notif_prayer;
+        const notifIftarRaw = settings?.notif_iftar;
+        const notifDuaRaw = settings?.notif_dua;
+        const notifKidsRaw = settings?.notif_kids;
+
+        if (typeof notifPrayerRaw === 'boolean') {
+          setNotifPrayerState(notifPrayerRaw);
+          patch.notifPrayer = notifPrayerRaw;
+        }
+        if (typeof notifIftarRaw === 'boolean') {
+          setNotifIftarState(notifIftarRaw);
+          patch.notifIftar = notifIftarRaw;
+        }
+        if (typeof notifDuaRaw === 'boolean') {
+          setNotifDuaState(notifDuaRaw);
+          patch.notifDua = notifDuaRaw;
+        }
+        if (typeof notifKidsRaw === 'boolean') {
+          setNotifKidsState(notifKidsRaw);
+          patch.notifKids = notifKidsRaw;
         }
 
         cacheSettings(patch);
@@ -233,10 +292,49 @@ export function AppSettingsProvider({ children }: { children: React.ReactNode })
     saveToFirestore({ uiTextSize: val });
   };
 
+  const persistNotificationSettings = (next: {
+    notifPrayer: boolean;
+    notifIftar: boolean;
+    notifDua: boolean;
+    notifKids: boolean;
+  }) => {
+    cacheSettings(next);
+    saveToFirestore({
+      settings: {
+        notif_prayer: next.notifPrayer,
+        notif_iftar: next.notifIftar,
+        notif_dua: next.notifDua,
+        notif_kids: next.notifKids,
+      }
+    });
+  };
+
+  const setNotifPrayer = (value: boolean) => {
+    setNotifPrayerState(value);
+    persistNotificationSettings({ notifPrayer: value, notifIftar, notifDua, notifKids });
+  };
+
+  const setNotifIftar = (value: boolean) => {
+    setNotifIftarState(value);
+    persistNotificationSettings({ notifPrayer, notifIftar: value, notifDua, notifKids });
+  };
+
+  const setNotifDua = (value: boolean) => {
+    setNotifDuaState(value);
+    persistNotificationSettings({ notifPrayer, notifIftar, notifDua: value, notifKids });
+  };
+
+  const setNotifKids = (value: boolean) => {
+    setNotifKidsState(value);
+    persistNotificationSettings({ notifPrayer, notifIftar, notifDua, notifKids: value });
+  };
+
   return (
-    <AppSettingsContext.Provider value={{ 
+    <AppSettingsContext.Provider value={{
       theme, mode, city, language, showTransliteration, arabicFontSize, uiTextSize,
-      setTheme, setMode, setCity, setLanguage, setShowTransliteration, setArabicFontSize, setUiTextSize
+      notifPrayer, notifIftar, notifDua, notifKids,
+      setTheme, setMode, setCity, setLanguage, setShowTransliteration, setArabicFontSize, setUiTextSize,
+      setNotifPrayer, setNotifIftar, setNotifDua, setNotifKids,
     }}>
       {children}
     </AppSettingsContext.Provider>

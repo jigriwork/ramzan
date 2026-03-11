@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f5132" /> <!-- Deep Emerald -->
+      <stop offset="100%" stop-color="#042a17" /> <!-- Midnight Green -->
+    </linearGradient>
+    <linearGradient id="moon-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffdc73" /> <!-- Soft Gold -->
+      <stop offset="100%" stop-color="#e3a72f" /> <!-- Deep Gold -->
+    </linearGradient>
+  </defs>
+  
+  <!-- Premium Squircle Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg-grad)" />
+  
+  <!-- Subtle Islamic 8-Point Star Mandala in Background -->
+  <g opacity="0.08" fill="#ffffff" transform="translate(256 256) scale(1.3) translate(-256 -256)">
+    <path d="M256 120 L273 219 L402 256 L273 293 L256 432 L239 293 L110 256 L239 219 Z" />
+    <path d="M256 120 L273 219 L402 256 L273 293 L256 432 L239 293 L110 256 L239 219 Z" transform="rotate(45 256 256)" />
+  </g>
+
+  <!-- Elegant Crescent Moon -->
+  <path d="M312 128 C375 160 380 250 330 310 C280 370 190 380 130 330 C150 370 200 395 256 395 C333 395 395 333 395 256 C395 195 360 145 312 128 Z" fill="url(#moon-grad)" />
+  
+  <!-- Inner 5-Point Star -->
+  <path d="M205 170 L212 195 L240 195 L218 212 L225 240 L205 224 L185 240 L192 212 L170 195 L198 195 Z" fill="url(#moon-grad)" />
+</svg>

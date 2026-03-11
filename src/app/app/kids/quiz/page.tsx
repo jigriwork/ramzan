@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronLeft, Trophy, Star, CheckCircle2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { kidsService } from '@/services/kidsService';
+import { kidsService, type KidsQuiz } from '@/services/kidsService';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { ensureAuthForSaving, useFirestore, useUser } from '@/firebase';
@@ -17,7 +17,7 @@ export default function KidsQuizPage() {
   const router = useRouter();
   const db = useFirestore();
   const { user } = useUser();
-  const [quiz, setQuiz] = useState<any>(null);
+  const [quiz, setQuiz] = useState<KidsQuiz | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
@@ -74,7 +74,7 @@ export default function KidsQuizPage() {
 
   const handleAnswer = (idx: number) => {
     setSelected(idx);
-    if (idx === currentQuestion.answer) {
+    if (idx === currentQuestion.correctIndex) {
       setScore(s => s + 1);
     }
     setTimeout(() => {
@@ -82,7 +82,7 @@ export default function KidsQuizPage() {
         setCurrentIndex(i => i + 1);
         setSelected(null);
       } else {
-        const finalScore = score + (idx === currentQuestion.answer ? 1 : 0);
+        const finalScore = score + (idx === currentQuestion.correctIndex ? 1 : 0);
         setFinished(true);
         kidsService.saveScore(quiz.id, finalScore);
         (async () => {
@@ -129,8 +129,8 @@ export default function KidsQuizPage() {
           <ChevronLeft className="w-6 h-6" />
         </Button>
         <div className="text-right">
-           <p className="text-xs font-black text-muted-foreground uppercase">Score</p>
-           <p className="text-xl font-black text-primary">{score}</p>
+          <p className="text-xs font-black text-muted-foreground uppercase">Score</p>
+          <p className="text-xl font-black text-primary">{score}</p>
         </div>
       </header>
 
@@ -141,25 +141,25 @@ export default function KidsQuizPage() {
 
       <Card className="border-none shadow-xl rounded-[3rem] overflow-hidden bg-white">
         <div className="bg-amber-100 p-12 text-center">
-           <h3 className="text-2xl font-black text-amber-900">{currentQuestion.question}</h3>
+          <h3 className="text-2xl font-black text-amber-900">{currentQuestion.question}</h3>
         </div>
         <CardContent className="p-8 grid grid-cols-1 gap-4">
-           {currentQuestion.options.map((opt: string, i: number) => (
-             <button 
-                key={opt}
-                disabled={selected !== null}
-                onClick={() => handleAnswer(i)}
-                className={cn(
-                  "p-6 rounded-[2rem] text-lg font-bold border-2 transition-all flex items-center justify-between",
-                  selected === i 
-                    ? (i === currentQuestion.answer ? "bg-emerald-50 border-emerald-500 text-emerald-800" : "bg-red-50 border-red-500 text-red-800")
-                    : "bg-white border-slate-100 hover:border-primary/20"
-                )}
-             >
-               {opt}
-               {selected === i && (i === currentQuestion.answer ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <XCircle className="w-6 h-6 text-red-500" />)}
-             </button>
-           ))}
+          {currentQuestion.options.map((opt: string, i: number) => (
+            <button
+              key={opt}
+              disabled={selected !== null}
+              onClick={() => handleAnswer(i)}
+              className={cn(
+                "p-6 rounded-[2rem] text-lg font-bold border-2 transition-all flex items-center justify-between",
+                selected === i
+                  ? (i === currentQuestion.correctIndex ? "bg-emerald-50 border-emerald-500 text-emerald-800" : "bg-red-50 border-red-500 text-red-800")
+                  : "bg-white border-slate-100 hover:border-primary/20"
+              )}
+            >
+              {opt}
+              {selected === i && (i === currentQuestion.correctIndex ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <XCircle className="w-6 h-6 text-red-500" />)}
+            </button>
+          ))}
         </CardContent>
       </Card>
     </div>
