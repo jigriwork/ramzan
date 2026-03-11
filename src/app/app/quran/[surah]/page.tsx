@@ -74,7 +74,7 @@ export default function SurahDetailsPage() {
   const handleShareSurah = () => {
     const shareData = {
       title: `Surah ${surahIndex}`,
-      text: `Reading Surah ${surahIndex} on NoorRamadan.\n\nExplore more on NoorRamadan!`,
+      text: `Reading Surah ${surahIndex} on Noor.\n\nExplore more on Noor!`,
       url: window.location.href,
     };
 
@@ -112,7 +112,7 @@ export default function SurahDetailsPage() {
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] bg-white/15 px-4 py-1.5 rounded-full backdrop-blur-md">Noble Quran</span>
           </div>
           <Button variant="ghost" className="mt-4 bg-white/10 rounded-full text-xs font-black uppercase tracking-widest text-white hover:bg-white/20" onClick={() => setIsAudioSheetOpen(true)}>
-             <Play className="w-4 h-4 mr-2" /> Play Recitation
+            <Play className="w-4 h-4 mr-2" /> Play Recitation
           </Button>
         </CardContent>
       </Card>
@@ -235,7 +235,7 @@ function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeT
   };
 
   const getTranslation = () => {
-    switch(activeTranslation) {
+    switch (activeTranslation) {
       case 'ur': return ayah.translation_ur;
       case 'hi': return ayah.translation_hi;
       default: return ayah.translation_en;
@@ -252,9 +252,9 @@ function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeT
           <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full text-primary/40 hover:text-primary" onClick={onAudioClick}>
             <Volume2 className="w-5 h-5" />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             className={`h-10 w-10 rounded-full ${isBookmarked ? 'text-primary bg-primary/10' : 'text-primary/40'}`}
             onClick={handleBookmark}
           >
@@ -267,7 +267,7 @@ function AyahRow({ ayah, activeTranslation, onAudioClick }: { ayah: any, activeT
         <p className="text-4xl arabic-font tracking-normal leading-[1.8]">
           {ayah.arabic}
         </p>
-        
+
         <div className="space-y-4 pt-4 border-t border-dashed">
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary/40">Transliteration</p>
           <p className="text-sm font-medium italic text-muted-foreground/60 leading-relaxed">

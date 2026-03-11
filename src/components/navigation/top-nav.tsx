@@ -18,7 +18,7 @@ export function TopNav() {
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
             <Moon className="text-white w-5 h-5" />
           </div>
-          <span className="text-xl font-headline font-bold text-primary">NoorRamadan</span>
+          <span className="text-xl font-headline font-bold text-primary">Noor</span>
         </Link>
 
         <div className="flex items-center gap-2">

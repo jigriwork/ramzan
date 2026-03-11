@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Bell, Clock, Sparkles, Baby } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
+import { toast } from '@/hooks/use-toast';
 
 export default function NotificationsSettingsPage() {
   const router = useRouter();
@@ -55,6 +56,7 @@ export default function NotificationsSettingsPage() {
           desc="Spiritual reminders and daily Duas"
           checked={notifDua}
           onChange={setNotifDua}
+          comingSoon
         />
         <NotificationItem
           icon={<Baby className="text-pink-500" />}
@@ -62,6 +64,7 @@ export default function NotificationsSettingsPage() {
           desc="Stories, quiz, and deeds reminders"
           checked={notifKids}
           onChange={setNotifKids}
+          comingSoon
         />
       </Card>
 
@@ -78,13 +81,24 @@ function NotificationItem({
   desc,
   checked,
   onChange,
+  comingSoon = false,
 }: {
   icon: React.ReactNode;
   label: string;
   desc: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  comingSoon?: boolean;
 }) {
+  const handleChange = (newChecked: boolean) => {
+    if (comingSoon) {
+      toast({ title: 'Coming Soon', description: `${label} reminders are rolling out soon.` });
+      return;
+    }
+    onChange(newChecked);
+    toast({ title: 'Saved', description: `${label} preference updated.` });
+  };
+
   return (
     <div className="p-8 flex items-center justify-between">
       <div className="flex items-center gap-5">
@@ -92,11 +106,18 @@ function NotificationItem({
           <div className="w-6 h-6">{icon}</div>
         </div>
         <div>
-          <p className="font-black text-lg">{label}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-black text-lg">{label}</p>
+            {comingSoon && (
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
+                Coming soon
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground font-medium">{desc}</p>
         </div>
       </div>
-      <Switch checked={checked} onCheckedChange={onChange} />
+      <Switch checked={checked} onCheckedChange={handleChange} />
     </div>
   );
 }

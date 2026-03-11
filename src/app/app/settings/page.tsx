@@ -16,28 +16,28 @@ export default function SettingsPage() {
     <div className="space-y-8 pb-24">
       <header>
         <h2 className="text-3xl font-black text-primary">Settings</h2>
-        <p className="text-muted-foreground font-medium">Personalize your NoorRamadan</p>
+        <p className="text-muted-foreground font-medium">Personalize your Noor</p>
       </header>
 
       <section className="space-y-4">
         <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-4">Preferences</h3>
         <Card className="border-none shadow-sm divide-y rounded-[2.5rem] bg-white overflow-hidden">
-          <SettingLink 
+          <SettingLink
             href="/app/settings/language"
-            icon={<Languages className="text-blue-500" />} 
-            label="Language & Transliteration" 
+            icon={<Languages className="text-blue-500" />}
+            label="Language & Transliteration"
             value={language.toUpperCase()}
           />
-          <SettingLink 
+          <SettingLink
             href="/app/settings/accessibility"
-            icon={<Accessibility className="text-emerald-500" />} 
-            label="Arabic Font & Accessibility" 
+            icon={<Accessibility className="text-emerald-500" />}
+            label="Arabic Font & Accessibility"
             value={arabicFontSize.charAt(0).toUpperCase() + arabicFontSize.slice(1)}
           />
-          <SettingLink 
+          <SettingLink
             href="/app/settings/notifications"
-            icon={<Bell className="text-purple-500" />} 
-            label="Notification Reminders" 
+            icon={<Bell className="text-purple-500" />}
+            label="Notification Reminders"
             value="Active"
           />
         </Card>
@@ -47,7 +47,7 @@ export default function SettingsPage() {
         <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-4">App Info</h3>
         <Card className="border-none shadow-sm divide-y rounded-[2.5rem] bg-white overflow-hidden">
           <SettingLink icon={<Shield className="text-slate-500" />} label="Privacy Policy" />
-          <SettingLink icon={<User className="text-slate-500" />} label="About NoorRamadan" value="v1.2.0" />
+          <SettingLink icon={<User className="text-slate-500" />} label="About Noor" value="v1.2.0" />
         </Card>
       </section>
 

@@ -5,7 +5,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2, Share2 } from 'lucide-react';
+import { Clock, MapPin, Heart, BookOpen, BookOpenText, Sparkles, Loader2, Share2, Compass } from 'lucide-react';
 import { useAppSettings } from '@/components/providers/app-settings-provider';
 import { useUser, useFirestore, useCollection, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, limit, doc } from 'firebase/firestore';
@@ -155,7 +155,7 @@ export default function HomeDashboard() {
     if (!todayDua) return;
     const shareData = {
       title: `Today's Dua: ${todayDua.title}`,
-      text: `${todayDua.arabic}\n\n${todayDua.translation_en}\n\nShared via NoorRamadan`,
+      text: `${todayDua.arabic}\n\n${todayDua.translation_en}\n\nShared via Noor`,
       url: window.location.origin + `/app/duas/${todayDua.id}`,
     };
 
@@ -230,6 +230,7 @@ export default function HomeDashboard() {
       </Card>
 
       <div className="grid grid-cols-2 gap-4">
+        <QuickActionButton icon={<Compass />} label="Qibla" href="/app/qibla" color="indigo" />
         <QuickActionButton icon={<BookOpen />} label="Quran" href="/app/quran" color="orange" />
         <QuickActionButton icon={<Clock />} label="Timings" href="/app/timings" color="blue" />
         <QuickActionButton icon={<BookOpenText />} label="Learn" href="/app/learn-namaz" color="emerald" />
@@ -292,7 +293,7 @@ export default function HomeDashboard() {
   );
 }
 
-function QuickActionButton({ icon, label, href, color }: { icon: React.ReactNode, label: string, href: string, color: 'orange' | 'blue' | 'emerald' | 'pink' | 'purple' }) {
+function QuickActionButton({ icon, label, href, color }: { icon: React.ReactNode, label: string, href: string, color: 'orange' | 'blue' | 'emerald' | 'pink' | 'purple' | 'indigo' }) {
   const colorStyles = {
     orange: {
       bg: 'bg-orange-100 dark:bg-orange-500/10',
@@ -313,6 +314,10 @@ function QuickActionButton({ icon, label, href, color }: { icon: React.ReactNode
     purple: {
       bg: 'bg-purple-100 dark:bg-purple-500/10',
       icon: 'text-purple-500 dark:text-purple-400',
+    },
+    indigo: {
+      bg: 'bg-indigo-100 dark:bg-indigo-500/10',
+      icon: 'text-indigo-500 dark:text-indigo-400',
     },
   };
 

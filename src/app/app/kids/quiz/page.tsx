@@ -150,14 +150,16 @@ export default function KidsQuizPage() {
               disabled={selected !== null}
               onClick={() => handleAnswer(i)}
               className={cn(
-                "p-6 rounded-[2rem] text-lg font-bold border-2 transition-all flex items-center justify-between",
+                "p-6 rounded-[2rem] text-lg font-bold border-2 transition-all flex items-center justify-between text-left",
                 selected === i
                   ? (i === currentQuestion.correctIndex ? "bg-emerald-50 border-emerald-500 text-emerald-800" : "bg-red-50 border-red-500 text-red-800")
                   : "bg-white border-slate-100 hover:border-primary/20"
               )}
             >
-              {opt}
-              {selected === i && (i === currentQuestion.correctIndex ? <CheckCircle2 className="w-6 h-6 text-emerald-500" /> : <XCircle className="w-6 h-6 text-red-500" />)}
+              <span>{opt}</span>
+              {selected === i && (
+                i === currentQuestion.correctIndex ? <CheckCircle2 className="w-6 h-6 text-emerald-500 shrink-0 ml-4" /> : <XCircle className="w-6 h-6 text-red-500 shrink-0 ml-4" />
+              )}
             </button>
           ))}
         </CardContent>

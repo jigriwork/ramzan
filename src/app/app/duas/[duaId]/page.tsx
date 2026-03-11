@@ -74,7 +74,7 @@ export default function DuaDetailPage() {
     if (!dua) return;
     const shareData = {
       title: dua.title,
-      text: `${dua.arabic}\n\n${dua.translation_en}\n\nShared via NoorRamadan`,
+      text: `${dua.arabic}\n\n${dua.translation_en}\n\nShared via Noor`,
       url: window.location.href,
     };
 
@@ -146,7 +146,7 @@ export default function DuaDetailPage() {
         </div>
         <CardContent className="p-10 space-y-10 text-center">
           <p className="text-5xl leading-loose arabic-font">{dua.arabic}</p>
-          
+
           <div className="space-y-8 pt-8 border-t border-dashed">
             <div>
               <p className="text-[10px] font-black uppercase tracking-widest text-primary/40 mb-2">Transliteration</p>
@@ -160,9 +160,9 @@ export default function DuaDetailPage() {
             </div>
           </div>
           <div className="flex justify-center pt-6">
-             <Button variant="secondary" className="rounded-full px-8" onClick={() => handleCopy(dua.arabic)}>
-               <Copy className="w-4 h-4 mr-2" /> Copy Arabic
-             </Button>
+            <Button variant="secondary" className="rounded-full px-8" onClick={() => handleCopy(dua.arabic)}>
+              <Copy className="w-4 h-4 mr-2" /> Copy Arabic
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -170,18 +170,18 @@ export default function DuaDetailPage() {
       <section className="space-y-4">
         <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground ml-4">Audio</h3>
         <Card className="border-none shadow-sm rounded-3xl p-6 bg-white flex items-center justify-between">
-           <div className="flex items-center gap-4">
-             <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
-               <Volume2 className="w-5 h-5 text-primary" />
-             </div>
-             <div>
-               <p className="font-bold">Play Recitation</p>
-               <p className="text-xs text-muted-foreground">Premium audio coming soon</p>
-             </div>
-           </div>
-           <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast({ title: "Coming Soon", description: "Audio recitations are being prepared." })}>
-             <ChevronLeft className="w-5 h-5 rotate-180 opacity-30" />
-           </Button>
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-primary/5 rounded-2xl flex items-center justify-center">
+              <Volume2 className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-bold">Play Recitation</p>
+              <p className="text-xs text-muted-foreground">Premium audio coming soon</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast({ title: "Coming Soon", description: "Audio recitations are being prepared." })}>
+            <ChevronLeft className="w-5 h-5 rotate-180 opacity-30" />
+          </Button>
         </Card>
       </section>
     </div>

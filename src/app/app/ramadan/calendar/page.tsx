@@ -79,10 +79,15 @@ export default function RamadanCalendarPage() {
     }));
 
     toast({
-      title: nextCompleted ? 'Marked Completed' : 'Marked Incomplete',
+      title: nextCompleted ? 'Completed' : 'Undone',
       description: `Day ${selectedDay} progress has been saved.`,
     });
   };
+
+  const completedCount = useMemo(() => {
+    return Object.values(completionByDay).filter(d => d.completed).length;
+  }, [completionByDay]);
+  const remainingCount = 30 - completedCount;
 
   return (
     <div className="space-y-8 pb-24">
@@ -93,6 +98,7 @@ export default function RamadanCalendarPage() {
         <div>
           <h2 className="text-3xl font-black text-primary">Calendar</h2>
           <p className="text-muted-foreground font-medium">Your Ramadan 1446 AH progress</p>
+          <p className="text-sm font-bold text-emerald-600 mt-1">{completedCount}/30 Days Completed &bull; {remainingCount} Remaining</p>
         </div>
       </header>
 
@@ -105,13 +111,18 @@ export default function RamadanCalendarPage() {
                 key={day}
                 onClick={() => setSelectedDay(day)}
                 className={cn(
-                  "h-20 rounded-3xl flex flex-col items-center justify-center gap-1 transition-all",
+                  "h-24 rounded-3xl flex flex-col items-center justify-center gap-1 transition-all",
                   isCompleted ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white text-muted-foreground hover:bg-secondary"
                 )}
               >
-                <span className="text-xs font-black opacity-50 uppercase">Day</span>
-                <span className="text-xl font-black">{day}</span>
-                {isCompleted && <CheckCircle2 className="w-3 h-3 text-white/60" />}
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black opacity-60 uppercase">Day</span>
+                  <span className="text-xl font-black">{day}</span>
+                </div>
+                <div className="flex items-center gap-1 opacity-90">
+                  {isCompleted && <CheckCircle2 className="w-3 h-3" />}
+                  <span className="text-[10px] font-bold uppercase tracking-wider">{isCompleted ? "Completed" : "Not Completed"}</span>
+                </div>
               </button>
             );
           })()
@@ -137,8 +148,8 @@ export default function RamadanCalendarPage() {
               <p className="text-sm font-medium italic">"My Lord, forgive and have mercy, for You are the best of those who show mercy."</p>
             </div>
             <div className="flex justify-center">
-              <Button className="rounded-full px-10 h-14 text-lg font-bold shadow-xl shadow-primary/20" onClick={markSelectedDayCompleted}>
-                {selectedDay && completionByDay[selectedDay]?.completed ? 'Mark Incomplete' : 'Mark Completed'}
+              <Button className={cn("rounded-full px-10 h-14 text-lg font-bold shadow-xl", selectedDay && completionByDay[selectedDay]?.completed ? "bg-secondary text-foreground hover:bg-secondary/80 shadow-none" : "shadow-primary/20")} onClick={markSelectedDayCompleted}>
+                {selectedDay && completionByDay[selectedDay]?.completed ? 'Undo' : 'Mark Completed'}
               </Button>
             </div>
           </div>

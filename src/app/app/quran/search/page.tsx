@@ -45,17 +45,17 @@ export default function QuranSearchPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-col gap-1">
-        <h2 className="text-2xl font-bold">Search Quran</h2>
-        <p className="text-muted-foreground text-sm">Find Surahs, Ayahs, or keywords</p>
+        <h2 className="text-2xl font-bold">Search Surah</h2>
+        <p className="text-muted-foreground text-sm">Search Surah by name or number</p>
       </header>
 
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur py-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input 
+          <Input
             autoFocus
-            placeholder="Type to search..." 
-            className="pl-10 h-12 rounded-2xl shadow-sm border-none bg-white" 
+            placeholder="Type to search..."
+            className="pl-10 h-12 rounded-2xl shadow-sm border-none bg-white"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
@@ -74,8 +74,8 @@ export default function QuranSearchPage() {
           </div>
           <div className="flex flex-wrap gap-2">
             {history.map(h => (
-              <button 
-                key={h} 
+              <button
+                key={h}
                 onClick={() => setQuery(h)}
                 className="px-4 py-2 bg-white rounded-full text-sm font-medium shadow-sm hover:bg-secondary transition-colors"
               >

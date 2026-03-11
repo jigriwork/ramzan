@@ -6,9 +6,9 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Deen App',
+  title: 'Noor',
   description: 'Quran, Duas, Ramadan, Kids',
-  applicationName: 'Deen App',
+  applicationName: 'Noor',
   manifest: '/manifest.json',
   icons: {
     icon: '/icon.svg',
